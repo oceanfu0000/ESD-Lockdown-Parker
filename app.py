@@ -45,7 +45,7 @@ app.register_blueprint(telegram_blueprint, url_prefix="/telegram")
 
 # Register Staff Blueprint (if you have one)
 from routes.staff import staff_blueprint
-app.register_blueprint(staff_blueprint, url_prefix="/api")
+app.register_blueprint(staff_blueprint, url_prefix="/staff")
 
 def init_db_and_run():
     app = create_app()    
