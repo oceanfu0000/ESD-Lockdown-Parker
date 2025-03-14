@@ -1,18 +1,37 @@
-from flask import Flask, jsonify, request
-# call supabase_client
-from supabase_client import supabase
+from flask import Blueprint, Flask, jsonify, request
+from flask_cors import CORS
+import os
+from supabase import create_client, Client
+from dotenv import load_dotenv
 
+# Get .env file
+# Please dont commit the .env file I will murder someone
+load_dotenv()
 
+# Get env for url + key
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
+# Create the connection to supabase
+supabase: Client = create_client(url, key)
+
+#region Create a Blueprint for guest routes
 app = Flask(__name__)
+
+CORS(app)
+
+guest_blueprint = Blueprint("guest", __name__)
+
+#endregion
 
 # Check OTP in DB
 # If exists, return Guest Details
 # If not, return No Guest Found
-@app.route('/validate/<int:otp>', methods=['PUT'])
+@guest_blueprint.route('/validate/<int:otp>', methods=['GET'])
 def validate(otp):
     try:
         response = supabase.table("guest").select("*").eq("otp",otp).execute()
-        if response.data == "":
+
+        if not response.data:
             return jsonify({"error": "no guest found"}),500
         
         return jsonify({"guest": response.data}),200
@@ -22,7 +41,7 @@ def validate(otp):
 # Check Guest Details using guest_id
 # If no fields specified, return all
 # If field specified (e.g./guest/1?field=loyalty_points), return loyalty_point only
-@app.route('/guest/<int:id>', methods=['GET'])
+@guest_blueprint.route('/<int:id>', methods=['GET'])
 def get_guest(id):
     try:
         # Fetch guest data from Supabase
@@ -49,7 +68,7 @@ def get_guest(id):
 
 # Update Loyalty Points to Guest
 # Get Information from Request Body (guest_id, points, operation (add, subtract))
-@app.route('/updateloyalty', methods = ['PUT'])
+@guest_blueprint.route('/updateloyalty', methods = ['PUT'])
 def update_loyalty():
     try:
         # Get the request JSON data
@@ -68,6 +87,9 @@ def update_loyalty():
         # Extract the current loyalty points
         current_loyalty_points = response.data[0].get('loyalty_points')
 
+        if current_loyalty_points <= 0 and operation == "subtract":
+            return jsonify({"error": "No money bro"}), 404
+
         # Calculate the new loyalty points based on the operation
         if operation == 'add':
             new_loyalty_points = current_loyalty_points + points
@@ -85,6 +107,11 @@ def update_loyalty():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+        
+# Register the guest Blueprint
+app.register_blueprint(guest_blueprint, url_prefix="/guest")
 
+#region Setting up Flask app
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=8082, debug=True)
+#endregion
