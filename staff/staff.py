@@ -1,10 +1,28 @@
-from flask import Blueprint, request, jsonify
+import os
+from flask import Blueprint, Flask, request, jsonify
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
-db = SQLAlchemy()
+#region Create a Blueprint for staff routes
+app = Flask(__name__)
 
-def init_db(app):
-    db.init_app(app)
+CORS(app)
+
+staff_blueprint = Blueprint("staff", __name__)
+
+# Register the staff Blueprint
+app.register_blueprint(staff_blueprint, url_prefix="/staff")
+#endregion
+
+#region Set up SQLAlchemy
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+     os.getenv('DATABASE_URL') or 'mysql+pymysql://root:1234@localhost:3306/staff'
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle': 299}
+
+db = SQLAlchemy(app)
+#endregion
 
 class Staff(db.Model):
     staff_id = db.Column(db.Integer, primary_key=True)
@@ -19,8 +37,6 @@ class Staff(db.Model):
             "pw": self.pw,
             "tele_id": self.tele_id
         }
-
-staff_blueprint = Blueprint("staff", __name__)
 
 @staff_blueprint.route("/", methods=["POST"])
 def create_staff():
@@ -71,3 +87,10 @@ def delete_staff(staff_id):
         return jsonify({"message": "Staff member deleted successfully"}), 200
     else:
         return jsonify({"error": "Staff member not found"}), 404
+
+#region Setting up Flask app
+app = Flask(__name__)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080, debug=True)
+#endregion

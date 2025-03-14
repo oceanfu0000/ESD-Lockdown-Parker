@@ -2,10 +2,22 @@ import RPi.GPIO as GPIO
 import logging
 import os
 from flask import Blueprint, Flask
-from lock import lock_blueprint
+from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+from os import environ
+
+#region Create a Flask app
+app = Flask(__name__)
+
+CORS(app)
 
 # Create a Blueprint for Lock Control routes
 lock_blueprint = Blueprint("lock", __name__)
+
+# Register the Lock Control Blueprint
+app.register_blueprint(lock_blueprint, url_prefix="/lock")
+
+#endregion
 
 relay_pin = 18
 
@@ -36,10 +48,9 @@ def close_lock():
     logger.info("lock closing")
     return "Lock closed"
 
+#region Setting up Flask app
 app = Flask(__name__)
 
-# Register the Lock Control Blueprint
-app.register_blueprint(lock_blueprint, url_prefix="/lock")
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=8080, debug=True)
+#endregion
