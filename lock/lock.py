@@ -1,7 +1,8 @@
 import RPi.GPIO as GPIO
 import logging
 import os
-from flask import Blueprint, request
+from flask import Blueprint, Flask
+from lock import lock_blueprint
 
 # Create a Blueprint for Lock Control routes
 lock_blueprint = Blueprint("lock", __name__)
@@ -34,3 +35,11 @@ def close_lock():
     GPIO.input(relay_pin)
     logger.info("lock closing")
     return "Lock closed"
+
+app = Flask(__name__)
+
+# Register the Lock Control Blueprint
+app.register_blueprint(lock_blueprint, url_prefix="/lock")
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)

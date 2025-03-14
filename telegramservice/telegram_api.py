@@ -1,7 +1,6 @@
 import os
 import requests
 from flask import Blueprint, request
-from extensions import db
 
 # Create a Blueprint for Telegram routes
 telegram_blueprint = Blueprint("telegram", __name__)
