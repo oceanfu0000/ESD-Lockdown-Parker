@@ -160,3 +160,7 @@ cython_debug/
 #.idea/
 telegramservice/esdlocking.json
 /node_modules
+
+# For gmail api 
+credential.json
+token.json
