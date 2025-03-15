@@ -17,11 +17,12 @@ telegramservice_blueprint = Blueprint("telegramservice", __name__)
 
 # Environment variables for Telegram Bot Token and Webhook URL
 TOKEN = os.getenv('TOKEN')
+PROJECT_ID = os.getenv('DIALOGFLOW_PROJECT_ID')
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TOKEN}"
 # WEBHOOK_URL = "https://chilly-years-wash.loca.lt/telegramservice/"
-DIALOGFLOW_PROJECT_ID = "lockdownhouser-njkw"
+DIALOGFLOW_PROJECT_ID = PROJECT_ID
 DIALOGFLOW_LANGUAGE_CODE = "en"
-GOOGLE_APPLICATION_CREDENTIALS = "telegramservice/esdlocking-f1ce01f348d6.json"
+GOOGLE_APPLICATION_CREDENTIALS = "telegramservice/esdlocking.json"
 
 # def set_webhook():
 #     url = f"https://api.telegram.org/bot{TOKEN}/setWebhook"
