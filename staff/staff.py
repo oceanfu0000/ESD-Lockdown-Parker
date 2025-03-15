@@ -104,6 +104,44 @@ def update_staff(staff_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Check OTP in DB
+# If exists, return Guest Id
+# If not, return No Guest Found
+@staff_blueprint.route('/validate', methods=['POST'])
+def validate():
+    try:
+        # Get the request data
+        data = request.json
+        staff_name = data["staff_name"]
+        password = data["password"]
+
+        # Query Supabase to get the staff by staff_name
+        response = supabase.table("staff").select("*").eq("staff_name", staff_name).execute()
+
+        # Check if the staff member exists
+        if not response.data:
+            return jsonify({"message": "Staff not found"}), 404
+
+        # Get the staff data (assuming only one record is returned)
+        staff = response.data[0]
+
+        # Check if the user has exceeded failed attempts limit
+        if staff["failed_attempts"] >= 3:
+            return jsonify({"message": "Account locked due to too many failed login attempts"}), 403
+
+        # Compare the provided password with the stored hashed password
+        if staff["password"] == password:
+            # Reset failed attempts on successful login
+            supabase.table("staff").update({"failed_attempts": 0}).eq("staff_name", staff_name).execute()
+            return jsonify({"message": "Login successful!", "Staff": staff}), 200
+        else:
+            # Increment failed attempts on unsuccessful login
+            supabase.table("staff").update({"failed_attempts": staff["failed_attempts"] + 1}).eq("staff_name", staff_name).execute()
+            return jsonify({"message": "Invalid password"}), 401
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # Delete a staff member by ID
 @staff_blueprint.route("/<int:staff_id>", methods=["DELETE"])
 def delete_staff(staff_id):
