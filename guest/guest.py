@@ -4,6 +4,7 @@ import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
+#region Supabase Set Up
 # Get .env file
 # Please dont commit the .env file I will murder someone
 load_dotenv()
@@ -13,6 +14,7 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 # Create the connection to supabase
 supabase: Client = create_client(url, key)
+#endregion
 
 #region Create a Blueprint for guest routes
 app = Flask(__name__)
@@ -20,25 +22,46 @@ app = Flask(__name__)
 CORS(app)
 
 guest_blueprint = Blueprint("guest", __name__)
-
 #endregion
 
-# Check OTP in DB
-# If exists, return Guest Details
-# If not, return No Guest Found
-@guest_blueprint.route('/validate/<int:otp>', methods=['GET'])
-def validate(otp):
-    try:
-        response = supabase.table("guest").select("*").eq("otp",otp).execute()
+# Create new guest
+@guest_blueprint.route('/',methods=["POST"])
+def create_guest():
+        try:
+            data = request.json
+            if "guest_name" in data and "guest_email" in data and "guest_tele" in data and "otp" in data:
+                # Insert new staff into the "staff" table in Supabase
+                response = supabase.table("guest").insert({
+                    "guest_name": data["guest_name"],
+                    "guest_email": data["guest_email"],
+                    "guest_tele": data["guest_tele"],
+                    "otp": data["otp"]
+                }).execute()
 
-        if not response.data:
-            return jsonify({"error": "no guest found"}),500
+                if response.data:
+                    return jsonify({"message": "Guest created successfully"}), 201
+                else:
+                    return jsonify({"error": "Failed to create guest member"}), 400
+            else:
+                return jsonify({"error": "Missing required fields"}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+# Read all guests
+@guest_blueprint.route('/', methods=["GET"])
+def get_all_guests():
+    try:
+        # Fetch all staff members from the "staff" table in Supabase
+        response = supabase.table("guest").select("*").execute()
         
-        return jsonify({"guest": response.data}),200
+        if response.data:
+            return jsonify(response.data), 200
+        else:
+            return jsonify({"error": "No guest found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Check Guest Details using guest_id
+# Read a specific staff member by ID
 # If no fields specified, return all
 # If field specified (e.g./guest/1?field=loyalty_points), return loyalty_point only
 @guest_blueprint.route('/<int:id>', methods=['GET'])
@@ -63,6 +86,73 @@ def get_guest(id):
             # Return all guest details
             return jsonify({"guest": guest}), 200
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Update a staff member by ID
+@guest_blueprint.route('/<int:guest_id>', methods=['PUT'])
+def update_guest(guest_id):
+    try:
+        # Fetch the staff member by staff_id from the "staff" table in Supabase
+        response = supabase.table("guest").select("*").eq("guest_id", guest_id).execute()
+
+        if response.data:
+            data = request.json
+
+            # Prepare the update data
+            update_data = {}
+            if "guest_name" in data:
+                update_data["guest_name"] = data["guest_name"]
+            if "otp" in data:
+                update_data["otp"] = data["otp"]
+            if "wallet" in data:
+                update_data["wallet"] = data["wallet"]
+
+            # Update the staff member in Supabase
+            update_response = supabase.table("guest").update(update_data).eq("guest_id", guest_id).execute()
+
+            if update_response.data:
+                return jsonify({"message": "Guest member updated successfully"}), 200
+            else:
+                return jsonify({"error": "Failed to update staff member"}), 400
+        else:
+            return jsonify({"error": "Guest member not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Delete a staff member by ID
+@guest_blueprint.route("/<int:guest_id>", methods=["DELETE"])
+def delete_staff(guest_id):
+    try:
+        # Fetch the staff member by staff_id from the "staff" table in Supabase
+        response = supabase.table("guest").select("*").eq("guest_id", guest_id).execute()
+
+        if response.data:
+            # Delete the staff member in Supabase
+            delete_response = supabase.table("guest").delete().eq("guest_id", guest_id).execute()
+
+            if delete_response.data:
+                return jsonify({"message": "Guest deleted successfully"}), 200
+            else:
+                return jsonify({"error": "Failed to delete guest member"}), 400
+        else:
+            return jsonify({"error": "Guest not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Check OTP in DB
+# If exists, return Guest Id
+# If not, return No Guest Found
+@guest_blueprint.route('/validate/<int:otp>', methods=['GET'])
+def validate(otp):
+    try:
+        response = supabase.table("guest").select("*").eq("otp",otp).execute()
+
+        if not response.data:
+            return jsonify({"message": "No Guest Found"}), 404
+        
+        return jsonify({"guest": response.data}), 200
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -107,7 +197,7 @@ def update_loyalty():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-        
+
 # Register the guest Blueprint
 app.register_blueprint(guest_blueprint, url_prefix="/guest")
 
