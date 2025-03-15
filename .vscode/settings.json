@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "addloyalty",
+        "dotenv",
         "getloyalty",
         "jsonify",
         "minusloyalty",
