@@ -11,6 +11,7 @@
 
 <body class="container mt-5">
     <h2 class="text-center">Purchase Ticket</h2>
+    <h3>reminder to self to change amount according to num ticket purchased</h3>
     <form id="payment-form">
         <div id="card-element">
             <!-- A Stripe Element will be inserted here. -->
@@ -62,7 +63,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         amount: 1000, // Amount in cents
-                        currency: 'usd',
+                        currency: 'sgd',
                         description: 'Ticket Purchase',
                         source: token.id
                     })
