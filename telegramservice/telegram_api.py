@@ -84,16 +84,16 @@ def send_message(chat_id, text):
 # Register the Telegram Blueprint
 app.register_blueprint(telegramservice_blueprint, url_prefix="/telegramservice")
 
-def test_detect_intent():
-    # Ensure your credentials are valid and the API call works
-    session_id = "test-session"
-    text = "Hello"
-    response = detect_intent_from_dialogflow(session_id, text)
-    print(response)
+# def test_detect_intent():
+#     # Ensure your credentials are valid and the API call works
+#     session_id = "test-session"
+#     text = "Hello"
+#     response = detect_intent_from_dialogflow(session_id, text)
+#     print(response)
     
 if __name__ == "__main__":
     # print(set_webhook())
-    test_detect_intent();
+    # test_detect_intent();
     app.run(host="0.0.0.0", port=8081, debug=True)
 #endregion
 

@@ -24,6 +24,6 @@ Forwarding https://abc123.ngrok.io -> http://localhost:8080
 ```
 ### 2. Chat to the bot!
 
-Go to telegram and search **@LockdownHouser_Bot**
+Go to telegram and search **@LockdownPaker_Bot**
 
 You can talk to it now :D
