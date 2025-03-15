@@ -139,7 +139,7 @@ def delete_staff(guest_id):
             return jsonify({"error": "Guest not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
 # Check OTP in DB
 # If exists, return Guest Id
 # If not, return No Guest Found
@@ -192,6 +192,48 @@ def update_loyalty():
         # Check if the update was successful
         if update_response:
             return jsonify({"message": "Loyalty points updated successfully", "new_loyalty_points": new_loyalty_points}), 200
+        else:
+            return jsonify({"error": "Failed to update loyalty points"}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Update Loyalty Points to Guest
+# Get Information from Request Body (guest_id, points, operation (add, subtract))
+@guest_blueprint.route('/updatewallet', methods = ['PUT'])
+def update_wallet():
+    try:
+        # Get the request JSON data
+        data = request.get_json()
+
+        guest_id = data['guest_id']
+        wallet = data['wallet']
+        operation = data['operation']
+
+        # Query the guest table to get current loyalty points
+        response = supabase.table("guest").select("guest_id", "wallet").eq("guest_id", guest_id).execute()
+        
+        if not response.data:
+            return jsonify({"error": "Guest not found"}), 404
+
+        # Extract the current loyalty points
+        current_wallet = response.data[0].get('wallet')
+
+        if current_wallet <= 0 and operation == "subtract":
+            return jsonify({"error": "No money bro"}), 404
+
+        # Calculate the new loyalty points based on the operation
+        if operation == 'add':
+            new_wallet = current_wallet + wallet
+        elif operation == 'subtract':
+            new_wallet = current_wallet - wallet
+
+        # Update the guest's loyalty points in the database
+        update_response = supabase.table("guest").update({"wallet": new_wallet}).eq("guest_id", guest_id).execute()
+
+        # Check if the update was successful
+        if update_response:
+            return jsonify({"message": "Wallet updated successfully", "wallet": new_wallet}), 200
         else:
             return jsonify({"error": "Failed to update loyalty points"}), 500
 
