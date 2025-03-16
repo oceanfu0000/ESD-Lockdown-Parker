@@ -159,3 +159,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 telegramservice/esdlocking.json
+/node_modules
+
+# For gmail api 
+credential.json
+token.json

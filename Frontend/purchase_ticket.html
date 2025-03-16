@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Purchase</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="container mt-5">
+    <h2 class="text-center">Purchase Ticket</h2>
+    <h3>reminder to self to change amount according to num ticket purchased</h3>
+    <form id="payment-form">
+        <div id="card-element">
+            <!-- A Stripe Element will be inserted here. -->
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Number of Tickets</label>
+            <input type="number" class="form-control" required min="1">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Payment Method</label>
+            <select class="form-control">
+                <option>Credit Card</option>
+                <option>Debit Card</option>
+                <option>PayPal</option>
+            </select>
+        </div>
+        <button type="submit" id="submit" class="btn btn-warning">Buy Now</button>
+    </form>
+</body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    var stripe = Stripe("pk_test_51R2qxUJfYtguBcSFQN3y7lCtQnsKcmhXefXmdyHJLb0TIA1TS7VFIvmUD51bEkrInKnJiNYAkJZ4mG4hpzsjijSB00e1FKcQDO");
+    var elements = stripe.elements();
+    var card = elements.create('card');
+    card.mount('#card-element');
+
+    var form = document.getElementById('payment-form');
+    var submitButton = document.getElementById('submit');
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        submitButton.disabled = true; // Prevent multiple submissions
+
+        const { token, error } = await stripe.createToken(card);
+
+        if (error) {
+            alert(error.message);
+            console.error(error);
+            submitButton.disabled = false; // Re-enable button
+        } else {
+            try {
+                const response = await fetch('http://127.0.0.1:8086/payment/charge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: 1000, // Amount in cents
+                        currency: 'sgd',
+                        description: 'Ticket Purchase',
+                        source: token.id
+                    })
+                });
+                console.log(response);
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Payment successful!');
+                    console.log(result);
+                    form.reset();
+                } else {
+                    alert('Payment failed: ' + result.error);
+                }
+            } catch (error) {
+                alert('Payment request failed. Please try again.');
+                console.error(error);
+            } finally {
+                submitButton.disabled = false;
+            }
+        }
+    });
+});
+
+</script>
+
+</html>
