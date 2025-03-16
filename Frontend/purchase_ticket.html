@@ -10,6 +10,15 @@
 </head>
 
 <body class="container mt-5">
+    <div id="navbar-placeholder"></div>
+    <script>
+        fetch("navbar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("navbar-placeholder").innerHTML = data;
+            })
+            .catch(error => console.error("Error loading the navbar:", error));
+    </script>
     <h2 class="text-center">Purchase Ticket</h2>
     <h3>reminder to self to change amount according to num ticket purchased</h3>
     <form id="payment-form">
