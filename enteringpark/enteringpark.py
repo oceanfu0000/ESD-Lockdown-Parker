@@ -1,11 +1,7 @@
-from flask import Blueprint, Flask, jsonify, request
+from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 
-import sys
-import os
-
-from supabase import create_client, Client
-from dotenv import load_dotenv
+from datetime import datetime
 
 import requests
 
@@ -20,41 +16,93 @@ enter_park_blueprint = Blueprint("enter_park", __name__)
 
 staff_URL = "http://127.0.0.1:8083/staff"
 guest_URL = "http://127.0.0.1:8082/guest"
+log_URL = "http://127.0.0.1:8084/logs"
 # Not Done Yet
 # door_URL = 
-log_URL = "http://127.0.0.1:8084/log"
 
 @enter_park_blueprint.route("/guest/<int:otp>", methods=["GET"])
-def user_enter_park(otp):
+def guest_enter_park(otp):
 
     print("Checking if in Guest DB")
-    guest_details = invoke_http(f"{guest_URL}/validate/{otp}")
-    code = guest_details.get("code")
-    print(guest_details["code"])
 
-    if(guest_details["code"] == 200):
-        print("Guest in DB! Opening Door Now")
-    
-    elif(guest_details["code"] == 404):
-        print("walahee")
+    try:
+        r = requests.get(f"{guest_URL}/validate/{otp}")
 
-    return guest_details
+        if r.status_code == 200:
+            print("Guest in DB! Opening Door Now")
+            # TODO: Trigger Door Opening Event
+            return jsonify({"message": "Access granted! Door opening."}), 200
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error communicating with guest service: {e}")
+        return jsonify({"error": "Guest service unavailable. Try again later."}), 503
+
+    print("No Guest Found, redirecting to ticket purchase.")
+    return jsonify({
+        "message": "No valid ticket found. Please purchase a ticket.",
+        "redirect_url": f"{guest_URL}/buy_ticket"
+    }), 404
 
 @enter_park_blueprint.route("/staff", methods=["GET"])
-def guest_enter_park():
-
-    print("Checking if in Staff DB")
-    staff_details = invoke_http(f"{staff_URL}/validate",method="POST",json=request.json)
-    code = staff_details.get("code")
-    print(staff_details["code"])
-
-    if(staff_details["code"] == 200):
-        print("Staff in DB! Opening Door Now")
+def staff_enter_park():
     
-    else:
-        print("walahee")
+    print("Checking if in Staff DB")
 
-    return staff_details  
+    if not request.json:
+        return jsonify({"error": "Missing request body"}), 400  # Bad Request
+
+    try:
+        r = requests.post(f"{staff_URL}/validate",json=request.json)
+
+        if(r.status_code == 200):
+            print("Staff in DB! Opening Door Now")
+            # TODO: Trigger Door Opening Event
+            try:
+                data = {
+                    # Get Staff ID
+                    "staff_id": r.json()['Staff']['staff_id'],
+                    "type": "Success",
+                    # Get Staff Name
+                    "message": f"Staff member {r.json()['Staff']['staff_name']} entered the Park!",
+                    "date_time": datetime.now().isoformat()
+                    }
+                r = requests.post(log_URL,json=data)
+
+                if r.status_code != 201:
+                    print(f"Failed to log entry: {r.status_code} - {r.text}")
+            except Exception as e:
+                print(f"Error logging entry: {e}")
+
+        elif(r.status_code == 401):
+            print("Invalid Password, Please Try Again")
+            # No action needed
+        
+        elif(r.status_code == 403):
+            # TODO: Telegram Notification
+            print("Account Locked due to failed attempts")
+            try:
+                data = {
+                    "staff_id": r.json()['Staff']['staff_id'],
+                    "type": "Failed",
+                    "message": f"Staff member {r.json()['Staff']['staff_name']} attempted to access the park but failed.",
+                    "date_time": datetime.now().isoformat()
+                }
+                r = requests.post(log_URL,json=data)
+
+                if r.status_code != 201:
+                    print(f"Failed to log entry: {r.status_code} - {r.text}")
+            except Exception as e:
+                print(f"Error logging entry: {e}")
+        
+        else:
+            print(f"Unexpected status code: {r.status_code}")
+
+        return r.json(), r.status_code
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Request to staff service failed: {e}")
+        return jsonify({"error": "Service unavailable"}), 503
+
 
 # Register the enter_park Blueprint
 app.register_blueprint(enter_park_blueprint, url_prefix="/enter_park")
@@ -63,48 +111,3 @@ app.register_blueprint(enter_park_blueprint, url_prefix="/enter_park")
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8085, debug=True)
 #endregion
-
-# region Invoking Methods
-SUPPORTED_HTTP_METHODS = set([
-    "GET", "OPTIONS", "HEAD", "POST", "PUT", "PATCH", "DELETE"
-])
-
-def invoke_http(url, method='GET', json=None, **kwargs):
-    """A simple wrapper for requests methods.
-       url: the url of the http service;
-       method: the http method;
-       json: the JSON input when needed by the http method;
-       return: the JSON reply content from the http service if the call succeeds;
-            otherwise, return a JSON object with a "code" name-value pair.
-    """
-    code = 200
-    result = {}
-
-    try:
-        if method.upper() in SUPPORTED_HTTP_METHODS:
-            r = requests.request(method, url, json=json, **kwargs)
-        else:
-            raise Exception(f"HTTP method {method} unsupported.")
-    except Exception as e:
-        code = 500
-        result = {"code": code, "message": f"Invocation of service fails: {url}. {str(e)}"}
-
-    if code not in range(200, 300):  # If not a success status code
-        result['code'] = code
-        return result
-
-    # Check http call result
-    if r.status_code != requests.codes.ok:
-        code = r.status_code
-        result['code'] = code
-
-    # Try to parse JSON result
-    try:
-        result = r.json() if len(r.content) > 0 else {"code": code, "message": "Empty response body"}
-    except Exception as e:
-        code = 500
-        result = {"code": code, "message": f"Invalid JSON output from service: {url}. {str(e)}"}
-
-    result['code'] = code  # Ensure the status code is added to the result
-    return result
-# endregion

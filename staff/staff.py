@@ -127,7 +127,7 @@ def validate():
 
         # Check if the user has exceeded failed attempts limit
         if staff["failed_attempts"] >= 3:
-            return jsonify({"message": "Account locked due to too many failed login attempts"}), 403
+            return jsonify({"message": "Account locked due to too many failed login attempts" , "Staff": staff}), 403
 
         # Compare the provided password with the stored hashed password
         if staff["password"] == password:
