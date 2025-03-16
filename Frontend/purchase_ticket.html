@@ -58,7 +58,7 @@
             submitButton.disabled = false; // Re-enable button
         } else {
             try {
-                const response = await fetch('http://127.0.0.1:8086/payment/charge', {
+                const response = await fetch('http://127.0.0.1:8086/payment/buyticket', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

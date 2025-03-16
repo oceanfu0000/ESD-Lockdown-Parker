@@ -164,3 +164,4 @@ telegramservice/esdlocking.json
 # For gmail api 
 credential.json
 token.json
+emailservice/credentials.json

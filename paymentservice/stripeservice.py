@@ -13,7 +13,7 @@ CORS(app)
 
 # region Create a Blueprint for payment routes
 # Create a Blueprint for Payment routes
-payment_blueprint = Blueprint("payment", __name__)
+payment_blueprint = Blueprint("stripeservice", __name__)
 # endregion
 
 
@@ -47,7 +47,7 @@ def charge():
         return jsonify(error=str(e)), 400
 
 
-app.register_blueprint(payment_blueprint, url_prefix="/payment")
+app.register_blueprint(payment_blueprint, url_prefix="/stripeservice")
 # region Setting up Flask app
 
 if __name__ == "__main__":
