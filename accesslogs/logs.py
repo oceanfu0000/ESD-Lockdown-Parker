@@ -15,20 +15,20 @@ key = os.getenv("SUPABASE_KEY")
 # Create the connection to supabase
 supabase: Client = create_client(url, key)
 
-#region Create a Blueprint for logs routes
+#region Create a Blueprint for accesslogs routes
 app = Flask(__name__)
 
 CORS(app)
 
-logs_blueprint = Blueprint("logs", __name__)
+accesslogs_blueprint = Blueprint("accesslogs", __name__)
 #endregion
 
-@logs_blueprint.route("/", methods=["POST"])
-def create_log():
+@accesslogs_blueprint.route("/", methods=["POST"])
+def create_accesslog():
     try:
         data = request.json
         if "type" in data and "message" in data and "staff_id" in data:
-            response = supabase.table("logs").insert({
+            response = supabase.table("accesslogs").insert({
                 "staff_id": data["staff_id"],
                 "type": data["type"],
                 "message": data["message"],
@@ -36,40 +36,40 @@ def create_log():
                 }).execute()
             
             if response.data:
-                return jsonify({"message": "Record logged!"}), 201
+                return jsonify({"message": "Record accesslogged!"}), 201
             else:
-                return jsonify({"error": "Failed to log!"}), 400
+                return jsonify({"error": "Failed to accesslog!"}), 400
         else:
             return jsonify({"error": "Missing required fields"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@logs_blueprint.route("/", methods=["GET"])
-def read_all_logs():
+@accesslogs_blueprint.route("/", methods=["GET"])
+def read_all_accesslogs():
         try:
-            response = supabase.table("logs").select("*").execute()
+            response = supabase.table("accesslogs").select("*").execute()
         
             if response.data:
                 return jsonify(response.data), 200
             else:
-                return jsonify({"error": "No logs found"}), 404
+                return jsonify({"error": "No accesslogs found"}), 404
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-@logs_blueprint.route("/<int:staff_id>", methods=["GET"])
-def get_logs(staff_id):
+@accesslogs_blueprint.route("/<int:staff_id>", methods=["GET"])
+def get_accesslogs(staff_id):
     try:
-        response = supabase.table("logs").select("*").eq("staff_id",staff_id).execute()
+        response = supabase.table("accesslogs").select("*").eq("staff_id",staff_id).execute()
 
         if not response.data:
             return jsonify({"error": "No records found"}),404
         
-        return jsonify({"logs": response.data})
+        return jsonify({"accesslogs": response.data})
     except Exception as e:
         return jsonify({"error": str(e)}),500
 
-# Register the logs Blueprint
-app.register_blueprint(logs_blueprint, url_prefix="/logs")
+# Register the accesslogs Blueprint
+app.register_blueprint(accesslogs_blueprint, url_prefix="/accesslogs")
 
 #region Setting up Flask app
 if __name__ == '__main__':

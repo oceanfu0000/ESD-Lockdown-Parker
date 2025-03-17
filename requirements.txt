@@ -5,3 +5,4 @@ dotenv
 flask_cors
 stripe
 google-api-python-client
+pika
