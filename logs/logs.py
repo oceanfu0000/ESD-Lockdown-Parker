@@ -4,6 +4,7 @@ import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from datetime import datetime, timezone
+import requests
 
 # Get .env file
 # Please dont commit the .env file I will murder someone
@@ -23,12 +24,27 @@ CORS(app)
 logs_blueprint = Blueprint("logs", __name__)
 #endregion
 
+#region Error Endpoint
+ERROR_MICROSERVICE_URL = "http://127.0.0.1:8079/error"
+
+def log_error(service, endpoint, error):
+    error_data = {
+        "service": service,
+        "endpoint": endpoint,
+        "error": error
+    }
+    try:
+        requests.post(ERROR_MICROSERVICE_URL, json=error_data)
+    except Exception as e:
+        print(f"Failed to log error: {e}")
+#endregion
+
 @logs_blueprint.route("/", methods=["POST"])
 def create_log():
     try:
         data = request.json
         if "type" in data and "message" in data and "staff_id" in data:
-            response = supabase.table("logs").insert({
+            response = supabase.table("accesslogs").insert({
                 "staff_id": data["staff_id"],
                 "type": data["type"],
                 "message": data["message"],
@@ -42,30 +58,33 @@ def create_log():
         else:
             return jsonify({"error": "Missing required fields"}), 400
     except Exception as e:
+        log_error("logs","/ (POST)", str(e))
         return jsonify({"error": str(e)}), 500
 
 @logs_blueprint.route("/", methods=["GET"])
 def read_all_logs():
         try:
-            response = supabase.table("logs").select("*").execute()
+            response = supabase.table("accesslogs").select("*").execute()
         
             if response.data:
                 return jsonify(response.data), 200
             else:
                 return jsonify({"error": "No logs found"}), 404
         except Exception as e:
+            log_error("logs","/ (GET)", str(e))
             return jsonify({"error": str(e)}), 500
 
 @logs_blueprint.route("/<int:staff_id>", methods=["GET"])
 def get_logs(staff_id):
     try:
-        response = supabase.table("logs").select("*").eq("staff_id",staff_id).execute()
+        response = supabase.table("accesslogs").select("*").eq("staff_id",staff_id).execute()
 
         if not response.data:
             return jsonify({"error": "No records found"}),404
         
         return jsonify({"logs": response.data})
     except Exception as e:
+        log_error("logs",f"/{staff_id} (GET)", str(e))
         return jsonify({"error": str(e)}),500
 
 # Register the logs Blueprint

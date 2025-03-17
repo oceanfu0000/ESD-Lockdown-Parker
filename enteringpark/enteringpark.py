@@ -14,6 +14,21 @@ enter_park_blueprint = Blueprint("enter_park", __name__)
 
 #endregion
 
+#region Error Endpoint
+ERROR_MICROSERVICE_URL = "http://127.0.0.1:8079/error"
+
+def log_error(service, endpoint, error):
+    error_data = {
+        "service": service,
+        "endpoint": endpoint,
+        "error": error
+    }
+    try:
+        requests.post(ERROR_MICROSERVICE_URL, json=error_data)
+    except Exception as e:
+        print(f"Failed to log error: {e}")
+#endregion
+
 staff_URL = "http://127.0.0.1:8083/staff"
 guest_URL = "http://127.0.0.1:8082/guest"
 log_URL = "http://127.0.0.1:8084/logs"
@@ -34,16 +49,18 @@ def guest_enter_park(otp):
             return jsonify({"message": "Access granted! Door opening."}), 200
 
     except requests.exceptions.RequestException as e:
-        print(f"Error communicating with guest service: {e}")
+        log_error("enter_park",f"/guest/{otp} (GET)", str(e))
         return jsonify({"error": "Guest service unavailable. Try again later."}), 503
 
+    # TODO: Change the redirect_url to the right one
     print("No Guest Found, redirecting to ticket purchase.")
     return jsonify({
         "message": "No valid ticket found. Please purchase a ticket.",
         "redirect_url": f"{guest_URL}/buy_ticket"
     }), 404
 
-@enter_park_blueprint.route("/staff", methods=["GET"])
+# NOTE: WIP
+@enter_park_blueprint.route("/staff", methods=["POST"])
 def staff_enter_park():
     
     print("Checking if in Staff DB")
@@ -71,6 +88,7 @@ def staff_enter_park():
                 if r.status_code != 201:
                     print(f"Failed to log entry: {r.status_code} - {r.text}")
             except Exception as e:
+                log_error("enter_park","/staff (POST)", str(e))
                 print(f"Error logging entry: {e}")
 
         elif(r.status_code == 401):
@@ -92,6 +110,7 @@ def staff_enter_park():
                 if r.status_code != 201:
                     print(f"Failed to log entry: {r.status_code} - {r.text}")
             except Exception as e:
+                log_error("enter_park","/staff (POST)", str(e))
                 print(f"Error logging entry: {e}")
         
         else:
@@ -99,10 +118,9 @@ def staff_enter_park():
 
         return r.json(), r.status_code
     
-    except requests.exceptions.RequestException as e:
-        print(f"Request to staff service failed: {e}")
+    except Exception as e:
+        log_error("enter_park","/staff (POST)", str(e))
         return jsonify({"error": "Service unavailable"}), 503
-
 
 # Register the enter_park Blueprint
 app.register_blueprint(enter_park_blueprint, url_prefix="/enter_park")

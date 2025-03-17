@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import requests
 
 # Get .env file
 # Please dont commit the .env file I will murder someone
@@ -21,6 +22,21 @@ CORS(app)
 
 staff_blueprint = Blueprint("staff", __name__)
 
+#endregion
+
+#region Error Endpoint
+ERROR_MICROSERVICE_URL = "http://127.0.0.1:8079/error"
+
+def log_error(service, endpoint, error):
+    error_data = {
+        "service": service,
+        "endpoint": endpoint,
+        "error": error
+    }
+    try:
+        requests.post(ERROR_MICROSERVICE_URL, json=error_data)
+    except Exception as e:
+        print(f"Failed to log error: {e}")
 #endregion
 
 # Create a new staff member
@@ -43,6 +59,7 @@ def create_staff():
         else:
             return jsonify({"error": "Missing required fields"}), 400
     except Exception as e:
+        log_error("staff","/ (POST)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Read all staff members
@@ -57,6 +74,7 @@ def read_all_staff():
         else:
             return jsonify({"error": "No staff members found"}), 404
     except Exception as e:
+        log_error("staff","/ (GET)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Read a specific staff member by ID
@@ -71,6 +89,7 @@ def read_staff(staff_id):
         else:
             return jsonify({"error": "Staff member not found"}), 404
     except Exception as e:
+        log_error("staff",f"/{staff_id} (GET)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Update a staff member by ID
@@ -102,6 +121,7 @@ def update_staff(staff_id):
         else:
             return jsonify({"error": "Staff member not found"}), 404
     except Exception as e:
+        log_error("staff",f"/{staff_id} (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Check OTP in DB
@@ -140,6 +160,7 @@ def validate():
             return jsonify({"message": "Invalid password"}), 401
 
     except Exception as e:
+        log_error("staff","/validate (POST)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Delete a staff member by ID
@@ -160,6 +181,7 @@ def delete_staff(staff_id):
         else:
             return jsonify({"error": "Staff member not found"}), 404
     except Exception as e:
+        log_error("staff",f"/{staff_id} (DELETE)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Register the staff Blueprint

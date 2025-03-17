@@ -1,3 +1,18 @@
+<!-- Leaving this here for reference
+Dahai: rabbit and error need to start 1st
+Dahai: then compos will start last
+Dahai: followed by the frontend
+ -->
+
+ <!-- Error Logging not implemented in
+ - email
+ - lock
+ - payment service
+ - rabbitmq
+ - telegram
+  -->
+
+error will be on port 8079
 lock MS on port 8080
 telegram MS on port 8081
 guest MS on port 8082
