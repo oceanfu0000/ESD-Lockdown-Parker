@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Entry Failed</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body class="container text-center mt-5">
     <div id="navbar-placeholder"></div>
     <script>
@@ -16,8 +18,31 @@
             })
             .catch(error => console.error("Error loading the navbar:", error));
     </script>
-    <h2 class="text-danger">Entry Denied!</h2>
-    <p>There was an issue with your ticket.</p>
-    <a href="ticket-purchase.html" class="btn btn-warning">Try Again</a>
+    <div class="container">
+        <h2 class="text-danger">Entry Denied!</h2>
+        <p>There was an issue with your ticket.</p>
+        <a href="ticket-purchase.html" class="btn btn-warning">Try Again</a>
+    </div>
+    
 </body>
+
 </html>
+
+<style>
+    body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-image: url("src/sad_kid.jpg");
+            background-size: cover; /* Ensures it covers the entire screen */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat; /* Prevents tiling */
+        }
+        .container {
+            text-align: center;
+            padding: 30px;
+            border-radius: 10px;
+            background-color: #F5F5F5
+        }
+</style>
