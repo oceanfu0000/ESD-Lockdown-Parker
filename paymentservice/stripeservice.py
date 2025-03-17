@@ -16,13 +16,6 @@ CORS(app)
 payment_blueprint = Blueprint("stripeservice", __name__)
 # endregion
 
-
-@app.route('/get-public-key', methods=['GET'])
-def get_public_key():
-    # Return the public key from the environment
-    public_key = os.getenv('STRIPE_PK')
-    return jsonify({"public_key": public_key})
-
 @payment_blueprint.route("/charge", methods=["POST"])
 def charge():
     try:
