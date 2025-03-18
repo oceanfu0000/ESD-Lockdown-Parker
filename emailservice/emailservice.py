@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Blueprint
 from flask_cors import CORS
 import os.path
 from email.mime.text import MIMEText  
@@ -11,7 +11,10 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 app = Flask(__name__)
+
 CORS(app)
+
+email_blueprint = Blueprint("email", __name__)
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
@@ -33,8 +36,6 @@ def send_email(service, sender, to, subject, message_text):
     except HttpError as error:
         print(f"An error occurred: {error}")
         return {"error": str(error)}, 400
-
-
 
 def authenticate():
   """Shows basic usage of the Gmail API.
@@ -60,8 +61,9 @@ def authenticate():
       token.write(creds.to_json())
   return build("gmail", "v1", credentials=creds)
 
-@app.route("/send-email", methods=["POST"])
-def endpoint():
+# TODO: Verify and Remove Comments from Hnin
+@email_blueprint.route("/", methods=["POST"])
+def sending_email():
   try:
     # Call the Gmail API
     # service = build("gmail", "v1", credentials=creds)
@@ -79,7 +81,6 @@ def endpoint():
     subject = data.get("subject")
     message_text = data.get("message")
 
-
     service = authenticate()
     response = send_email(service, sender_email, recipient_email, subject, message_text)
     return jsonify(response)
@@ -90,6 +91,8 @@ def endpoint():
     return jsonify({"error": str(error)}), 500
 
 
+app.register_blueprint(email_blueprint, url_prefix="/email")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+  app.run(host='0.0.0.0', port=8088, debug=True)
+

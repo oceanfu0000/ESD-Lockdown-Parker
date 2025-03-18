@@ -19,6 +19,7 @@ lock MS on port 8080
 guest MS on port 8082
 staff MS on port 8083
 logs MS on port 8084
+email MS on port 8088
 
 stripeservice MS on port 8086
 

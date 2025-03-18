@@ -38,11 +38,11 @@ log_URL = "http://127.0.0.1:8084/logs"
 @enter_park_blueprint.route("/guest/<int:otp>", methods=["GET"])
 def guest_enter_park(otp):
 
-    print("Checking if in Guest DB")
-
     try:
+        # Check if in Guest DB
         r = requests.get(f"{guest_URL}/validate/{otp}")
-
+        
+        # Guest Found!
         if r.status_code == 200:
             print("Guest in DB! Opening Door Now")
             # TODO: Trigger Door Opening Event
@@ -52,8 +52,8 @@ def guest_enter_park(otp):
         log_error("enter_park",f"/guest/{otp} (GET)", str(e))
         return jsonify({"error": "Guest service unavailable. Try again later."}), 503
 
-    # TODO: Change the redirect_url to the right one
-    print("No Guest Found, redirecting to ticket purchase.")
+    # TODO: Change the guest_URL to the right one
+    # No Guest Found! Redirect them to buy tickets
     return jsonify({
         "message": "No valid ticket found. Please purchase a ticket.",
         "redirect_url": f"{guest_URL}/buy_ticket"
@@ -63,14 +63,15 @@ def guest_enter_park(otp):
 @enter_park_blueprint.route("/staff", methods=["POST"])
 def staff_enter_park():
     
-    print("Checking if in Staff DB")
-
+    # Check if Request Body was provided
     if not request.json:
         return jsonify({"error": "Missing request body"}), 400  # Bad Request
 
     try:
+        # Check if in Staff DB
         r = requests.post(f"{staff_URL}/validate",json=request.json)
 
+        # Staff Found!
         if(r.status_code == 200):
             print("Staff in DB! Opening Door Now")
             # TODO: Trigger Door Opening Event
@@ -91,6 +92,7 @@ def staff_enter_park():
                 log_error("enter_park","/staff (POST)", str(e))
                 print(f"Error logging entry: {e}")
 
+        # Invalid Password
         elif(r.status_code == 401):
             print("Invalid Password, Please Try Again")
             # No action needed
