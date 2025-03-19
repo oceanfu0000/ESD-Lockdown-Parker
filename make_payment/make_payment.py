@@ -109,8 +109,11 @@ def buyticket():
             try:
                 otp = 123456
                 #need request for OTP
+                #get old loyalty points
+                old = requests.get(f"{guest_URL}/{request.json['guest_id']}")
+                old = old.json()['loyalty_points']
                 #put OTP into guest
-                requests.put(f"{guest_URL}/{request.json['guest_id']}",{"otp":request.json['charge']['otp']})
+                requests.put(f"{guest_URL}/{request.json['guest_id']}",{"otp":request.json['charge']['otp'],'loyalty_points':old-request.json['charge']['amount']})
                 #rabbit to notification service
                 rabbit_client.channel.basic_publish(
                                 exchange=exchange_name,

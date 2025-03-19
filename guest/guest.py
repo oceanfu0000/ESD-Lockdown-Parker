@@ -1,4 +1,7 @@
+from datetime import datetime
+import math
 from flask import Blueprint, Flask, jsonify, request
+import pytz
 import requests
 from flask_cors import CORS
 import os
@@ -45,13 +48,12 @@ def log_error(service, endpoint, error):
 def create_guest():
         try:
             data = request.json
-            if "guest_name" in data and "guest_email" in data and "guest_tele" in data and "otp" in data:
+            if "guest_name" in data and "guest_email" in data and "guest_tele" in data:
                 # Insert new staff into the "staff" table in Supabase
                 response = supabase.table("guest").insert({
                     "guest_name": data["guest_name"],
                     "guest_email": data["guest_email"],
-                    "guest_tele": data["guest_tele"],
-                    "otp": data["otp"]
+                    "guest_tele": data["guest_tele"]
                 }).execute()
 
                 if response.data:
@@ -109,35 +111,44 @@ def get_guest(guest_id):
         return jsonify({"error": str(e)}), 500
 
 # Update a staff member by ID
+# {
+#     "guest_name": "John Doe",
+#     "guest_email": "john.doe@example.com",
+#     "guest_tele": "+123456789",
+#     "wallet": "100", 
+#     "otp": "123456",
+#     "loyalty_points": 100,
+#     "otp_valid_datetime": "2025-03-19T10:00:00+00:00"
+# }
 @guest_blueprint.route('/<int:guest_id>', methods=['PUT'])
 def update_guest(guest_id):
     try:
-        # Fetch the staff member by staff_id from the "staff" table in Supabase
-        response = supabase.table("guest").select("*").eq("guest_id", guest_id).execute()
+        data = request.json
+        required_fields = {"guest_name", "guest_email", "guest_tele", "wallet", "otp", "loyalty_points", "otp_valid_datetime"}
+        
+        if required_fields.issubset(data):
+            # Parse the otp_valid_datetime to datetime object with timezone
+            otp_valid_datetime = datetime.strptime(data["otp_valid_datetime"], "%Y-%m-%dT%H:%M:%S%z")
+            
+            # Update the guest in the "guest" table in Supabase
+            response = supabase.table("guest").update({
+                "guest_name": data["guest_name"],
+                "guest_email": data["guest_email"],
+                "guest_tele": data["guest_tele"],
+                "wallet": data["wallet"],
+                "otp": data["otp"],
+                "loyalty_points": data["loyalty_points"],
+                "otp_valid_datetime": otp_valid_datetime
+            }).eq("id", guest_id).execute()
 
-        if response.data:
-            data = request.json
-
-            # Prepare the update data
-            update_data = {}
-            if "guest_name" in data:
-                update_data["guest_name"] = data["guest_name"]
-            if "otp" in data:
-                update_data["otp"] = data["otp"]
-            if "wallet" in data:
-                update_data["wallet"] = data["wallet"]
-
-            # Update the staff member in Supabase
-            update_response = supabase.table("guest").update(update_data).eq("guest_id", guest_id).execute()
-
-            if update_response.data:
-                return jsonify({"message": "Guest member updated successfully"}), 200
+            if response.data:
+                return jsonify({"message": "Guest updated successfully"}), 200
             else:
-                return jsonify({"error": "Failed to update staff member"}), 400
+                return jsonify({"error": "Failed to update guest"}), 400
         else:
-            return jsonify({"error": "Guest member not found"}), 404
+            return jsonify({"error": "Missing required fields"}), 400
     except Exception as e:
-        log_error("guest",f"/{guest_id} (PUT)", str(e))
+        log_error("guest", f"/{guest_id} (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Delete a staff member by ID
@@ -168,9 +179,31 @@ def delete_staff(guest_id):
 def validate(otp):
     try:
         response = supabase.table("guest").select("*").eq("otp",otp).execute()
-
         if not response.data:
             return jsonify({"message": "No Guest Found"}), 404
+        
+        # guest_data = response.data[0]
+
+        # Check if otp_valid_datetime is still valid if is null is also valid
+        otp_valid_datetime = response.data[0].get("otp_valid_datetime")
+        if not otp_valid_datetime:
+            # Get today's date in Singapore timezone (SGT)
+            sg_tz = pytz.timezone('Asia/Singapore')
+            today = datetime.now(sg_tz).date()  # Get current date in Singapore Time (SGT)
+            
+            # Manually create a naive datetime for 23:59:59.999999
+            otp_valid_datetime_naive = datetime(
+                today.year, today.month, today.day, 23, 59, 59, 999999
+            )
+            # Localize the naive datetime to the Singapore timezone
+            otp_valid_datetime_naive = sg_tz.localize(otp_valid_datetime_naive)
+            timeData = otp_valid_datetime_naive.isoformat()
+            response = supabase.table("guest").update({"otp_valid_datetime": timeData}).eq("guest_id", response.data[0]["guest_id"]).execute()
+
+            return jsonify({"message": "OTP Validated, OTP will be available till end of today."}), 200
+
+        if datetime.fromisoformat(otp_valid_datetime) < datetime.now(pytz.utc):
+            return jsonify({"message": "OTP has expired"}) , 404
         
         return jsonify({"guest": response.data}), 200
     
@@ -178,91 +211,221 @@ def validate(otp):
         log_error("guest",f"/validate/{otp} (GET)", str(e))
         return jsonify({"error": str(e)}), 500
 
-# Update Loyalty Points to Guest
-# Get Information from Request Body (guest_id, points, operation (add, subtract))
-@guest_blueprint.route('/updateloyalty', methods = ['PUT'])
-def update_loyalty():
+@guest_blueprint.route('/isotpunique/<int:otp>', methods=['GET'])
+def isOtpUnique(otp):
     try:
-        # Get the request JSON data
-        data = request.get_json()
+        response = supabase.table("guest").select("*").eq("otp",otp).execute()
 
-        guest_id = data['guest_id']
-        points = data['points']
-        operation = data['operation']
-
-        # Query the guest table to get current loyalty points
-        response = supabase.table("guest").select("guest_id", "loyalty_points").eq("guest_id", guest_id).execute()
-        
         if not response.data:
-            return jsonify({"error": "Guest not found"}), 404
-
-        # Extract the current loyalty points
-        current_loyalty_points = response.data[0].get('loyalty_points')
-
-        if current_loyalty_points <= 0 and operation == "subtract":
-            return jsonify({"error": "No money bro"}), 404
-
-        # Calculate the new loyalty points based on the operation
-        if operation == 'add':
-            new_loyalty_points = current_loyalty_points + points
-        elif operation == 'subtract':
-            new_loyalty_points = current_loyalty_points - points
-
-        # Update the guest's loyalty points in the database
-        update_response = supabase.table("guest").update({"loyalty_points": new_loyalty_points}).eq("guest_id", guest_id).execute()
-
-        # Check if the update was successful
-        if update_response:
-            return jsonify({"message": "Loyalty points updated successfully", "new_loyalty_points": new_loyalty_points}), 200
-        else:
-            return jsonify({"error": "Failed to update loyalty points"}), 500
-
+            return jsonify({"message": "OTP is Unique"}), 200
+        
+        return jsonify({"guest": response.data}), 404
+    
     except Exception as e:
-        log_error("guest","/updateloyalty (PUT)", str(e))
+        log_error("guest",f"/validate/{otp} (GET)", str(e))
         return jsonify({"error": str(e)}), 500
 
+
+# {
+#   "points": 100,
+#   "otp": "123456"
+# }
 # Update Loyalty Points to Guest
 # Get Information from Request Body (guest_id, points, operation (add, subtract))
-@guest_blueprint.route('/updatewallet', methods = ['PUT'])
-def update_wallet():
+@guest_blueprint.route('/buyticketbyloyalty/<int:id>', methods=['PUT'])
+def buyticketbyloyalty(id):
     try:
         # Get the request JSON data
         data = request.get_json()
 
-        guest_id = data['guest_id']
-        wallet = data['wallet']
-        operation = data['operation']
+        points_to_subtract = data['points']  # Points to subtract
+        new_otp = data['otp']  # OTP to update
 
-        # Query the guest table to get current loyalty points
-        response = supabase.table("guest").select("guest_id", "wallet").eq("guest_id", guest_id).execute()
+        # Query the guest table to get current loyalty points and OTP
+        response = supabase.table("guest").select("guest_id", "loyalty_points", "otp", "otp_valid_datetime").eq("guest_id", id).execute()
         
         if not response.data:
             return jsonify({"error": "Guest not found"}), 404
 
+        # Extract the current loyalty points, OTP, and otp_valid_datetime
+        guest_data = response.data[0]
+        current_loyalty_points = guest_data.get('loyalty_points')
+
+        # Check if there are enough points to subtract
+        if current_loyalty_points < points_to_subtract:
+            return jsonify({"error": "Insufficient loyalty points"}), 400
+
+        # Calculate the new loyalty points after subtraction
+        new_loyalty_points = current_loyalty_points - points_to_subtract
+
+        # Update the guest's loyalty points, OTP, and set otp_valid_datetime to null
+        update_response = supabase.table("guest").update({
+            "loyalty_points": new_loyalty_points,
+            "otp": new_otp,  # Update OTP with the new value
+            "otp_valid_datetime": None  # Set otp_valid_datetime to null
+        }).eq("guest_id", id).execute()
+
+        # Check if the update was successful
+        if update_response.data:
+            return jsonify({
+                "message": "Ticket bought successfully using loyalty points",
+                "new_loyalty_points": new_loyalty_points,
+                "updated_otp": new_otp
+            }), 200
+        else:
+            return jsonify({"error": "Failed to update loyalty points, OTP, and otp_valid_datetime"}), 500
+
+    except Exception as e:
+        log_error("guest", f"/buyticketbyloyalty/{id} (PUT)", str(e))
+        return jsonify({"error": str(e)}), 500
+# {
+#   "amount": 150.75,
+#   "otp": "123456"
+# }
+@guest_blueprint.route('/buyticket/<int:id>', methods=['PUT'])
+def buyticket(id):
+    try:
+        # Get the request JSON data
+        data = request.get_json()
+
+        amount = data['amount']  # The amount spent
+        points_to_add = math.ceil(amount * 0.10)  # Calculate 10% and round up if necessary
+        new_otp = data['otp']  # New OTP to update
+
+        # Query the guest table to get current loyalty points and OTP
+        response = supabase.table("guest").select("guest_id", "loyalty_points", "otp", "otp_valid_datetime").eq("guest_id", id).execute()
+
+        if not response.data:
+            return jsonify({"error": "Guest not found"}), 404
+
         # Extract the current loyalty points
+        guest_data = response.data[0]
+        current_loyalty_points = guest_data.get('loyalty_points')
+
+        # Calculate the new loyalty points after addition
+        new_loyalty_points = current_loyalty_points + points_to_add
+
+        # Update the guest's loyalty points and OTP in the database
+        update_response = supabase.table("guest").update({
+            "loyalty_points": new_loyalty_points,
+            "otp": new_otp,
+            "otp_valid_datetime": None  # Set the OTP valid datetime to None
+        }).eq("guest_id", id).execute()
+
+        # Check if the update was successful
+        if update_response.data:
+            return jsonify({
+                "message": "Ticket bought successfully, loyalty points added.",
+                "points_added": points_to_add,
+                "updated_otp": new_otp,
+            }), 200
+        else:
+            return jsonify({"error": "Failed to update loyalty points, OTP, or otp_valid_datetime"}), 500
+
+    except Exception as e:
+        log_error("guest", f"/buyticket/{id} (PUT)", str(e))
+        return jsonify({"error": str(e)}), 500
+    
+
+@guest_blueprint.route('/buyticketfromwallet/<int:id>', methods=['PUT'])
+def buyticketfromwallet(id):
+    try:
+        # Get the request JSON data
+        data = request.get_json()
+
+        amount = data['amount']  # The amount spent
+        new_otp = data['otp']  # New OTP to update
+
+        # Calculate loyalty points to add (e.g., 10% of the amount)
+        points_to_add = math.ceil(amount * 0.10)  # Calculate 10% and round up if necessary
+
+        # Query the guest table to get current wallet balance, loyalty points, and OTP
+        response = supabase.table("guest").select("guest_id", "wallet", "loyalty_points", "otp", "otp_valid_datetime").eq("guest_id", id).execute()
+
+        if not response.data:
+            return jsonify({"error": "Guest not found"}), 404
+
+        # Extract the current wallet balance and loyalty points
+        guest_data = response.data[0]
+        current_wallet = guest_data.get('wallet')
+        current_loyalty_points = guest_data.get('loyalty_points')
+
+        # Ensure that there are enough funds in the wallet
+        if current_wallet < amount:
+            return jsonify({"error": "Insufficient wallet funds"}), 400
+
+        # Subtract the amount from the wallet
+        new_wallet_balance = current_wallet - amount
+
+        # Calculate the new loyalty points after addition
+        new_loyalty_points = current_loyalty_points + points_to_add
+
+        # Update the guest's wallet, loyalty points, and OTP in the database
+        update_response = supabase.table("guest").update({
+            "wallet": new_wallet_balance,
+            "loyalty_points": new_loyalty_points,
+            "otp": new_otp,
+            "otp_valid_datetime": None  # Set the OTP valid datetime to None
+        }).eq("guest_id", id).execute()
+
+        # Check if the update was successful
+        if update_response.data:
+            return jsonify({
+                "message": "Ticket bought successfully, wallet updated, loyalty points added.",
+                "amount_subtracted": amount,
+                "loyalty_points_added": points_to_add,
+                "updated_otp": new_otp,
+            }), 200
+        else:
+            return jsonify({"error": "Failed to update wallet, loyalty points, OTP, or otp_valid_datetime"}), 500
+
+    except Exception as e:
+        log_error("guest", f"/buyticket/{id} (PUT)", str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+# Update Wallet
+# Get Information from Request Body (guest_id, wallet)
+@guest_blueprint.route('/updatewallet/<int:guest_id>', methods = ['PUT'])
+def update_wallet(guest_id):
+    try:
+        # Get the request JSON data
+        data = request.get_json()
+
+        wallet_amount = data['wallet']  # The wallet amount to be added or subtracted
+
+        # Ensure wallet_amount is not zero
+        if wallet_amount == 0:
+            return jsonify({"error": "Wallet amount cannot be zero"}), 400
+
+        # Query the guest table to get the current wallet balance
+        response = supabase.table("guest").select("wallet").eq("guest_id", guest_id).execute()
+
+        if not response.data:
+            return jsonify({"error": "Guest not found"}), 404
+
+        # Extract the current wallet balance
         current_wallet = response.data[0].get('wallet')
 
-        if current_wallet <= 0 and operation == "subtract":
-            return jsonify({"error": "No money bro"}), 404
+        # Ensure that we don't allow subtraction that makes the wallet negative
+        if wallet_amount < 0 and current_wallet < abs(wallet_amount):
+            return jsonify({"error": "Insufficient funds"}), 400
 
-        # Calculate the new loyalty points based on the operation
-        if operation == 'add':
-            new_wallet = current_wallet + wallet
-        elif operation == 'subtract':
-            new_wallet = current_wallet - wallet
+        new_wallet = current_wallet + wallet_amount  # Subtracting by adding a negative value or adding it
 
-        # Update the guest's loyalty points in the database
+        # Update the guest's wallet in the database
         update_response = supabase.table("guest").update({"wallet": new_wallet}).eq("guest_id", guest_id).execute()
 
         # Check if the update was successful
-        if update_response:
+        if update_response.data:
             return jsonify({"message": "Wallet updated successfully", "wallet": new_wallet}), 200
         else:
-            return jsonify({"error": "Failed to update loyalty points"}), 500
+            return jsonify({"error": "Failed to update wallet"}), 500
 
     except Exception as e:
-        log_error("guest","/updatewallet (PUT)", str(e))
+        log_error("guest", f"/updatewallet/{guest_id} (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
+
 
 # Register the guest Blueprint
 app.register_blueprint(guest_blueprint, url_prefix="/guest")
