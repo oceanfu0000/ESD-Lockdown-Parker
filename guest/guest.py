@@ -28,21 +28,6 @@ CORS(app)
 guest_blueprint = Blueprint("guest", __name__)
 #endregion
 
-#region Error Endpoint
-ERROR_MICROSERVICE_URL = "http://127.0.0.1:8079/error"
-
-def log_error(service, endpoint, error):
-    error_data = {
-        "service": service,
-        "endpoint": endpoint,
-        "error": error
-    }
-    try:
-        requests.post(ERROR_MICROSERVICE_URL, json=error_data)
-    except Exception as e:
-        print(f"Failed to log error: {e}")
-#endregion
-
 # Create new guest
 @guest_blueprint.route('/',methods=["POST"])
 def create_guest():
@@ -63,7 +48,6 @@ def create_guest():
             else:
                 return jsonify({"error": "Missing required fields"}), 400
         except Exception as e:
-            log_error("guest","/ (POST)", str(e))
             return jsonify({"error": str(e)}), 500
 
 # Read all guests
@@ -78,7 +62,6 @@ def get_all_guests():
         else:
             return jsonify({"error": "No guest found"}), 404
     except Exception as e:
-        log_error("guest","/ (GET)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Read a specific guest member by ID
@@ -107,10 +90,9 @@ def get_guest(guest_id):
             return jsonify({"guest": guest}), 200
 
     except Exception as e:
-        log_error("guest",f"/{guest_id} (GET)", str(e))
         return jsonify({"error": str(e)}), 500
 
-# Update a staff member by ID
+# Update a guest member by ID
 # {
 #     "guest_name": "John Doe",
 #     "guest_email": "john.doe@example.com",
@@ -120,6 +102,7 @@ def get_guest(guest_id):
 #     "loyalty_points": 100,
 #     "otp_valid_datetime": "2025-03-19T10:00:00+00:00"
 # }
+
 @guest_blueprint.route('/<int:guest_id>', methods=['PUT'])
 def update_guest(guest_id):
     try:
@@ -138,8 +121,8 @@ def update_guest(guest_id):
                 "wallet": data["wallet"],
                 "otp": data["otp"],
                 "loyalty_points": data["loyalty_points"],
-                "otp_valid_datetime": otp_valid_datetime
-            }).eq("id", guest_id).execute()
+                "otp_valid_datetime": otp_valid_datetime.isoformat()
+            }).eq("guest_id", guest_id).execute()
 
             if response.data:
                 return jsonify({"message": "Guest updated successfully"}), 200
@@ -148,7 +131,6 @@ def update_guest(guest_id):
         else:
             return jsonify({"error": "Missing required fields"}), 400
     except Exception as e:
-        log_error("guest", f"/{guest_id} (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Delete a staff member by ID
@@ -169,12 +151,9 @@ def delete_staff(guest_id):
         else:
             return jsonify({"error": "Guest not found"}), 404
     except Exception as e:
-        log_error("guest",f"/{guest_id} (DELETE)", str(e))
         return jsonify({"error": str(e)}), 500
     
 # Check OTP in DB
-# If exists, return Guest Id
-# If not, return No Guest Found
 @guest_blueprint.route('/validate/<int:otp>', methods=['GET'])
 def validate(otp):
     try:
@@ -208,7 +187,6 @@ def validate(otp):
         return jsonify({"guest": response.data}), 200
     
     except Exception as e:
-        log_error("guest",f"/validate/{otp} (GET)", str(e))
         return jsonify({"error": str(e)}), 500
 
 @guest_blueprint.route('/isotpunique/<int:otp>', methods=['GET'])
@@ -222,16 +200,14 @@ def isOtpUnique(otp):
         return jsonify({"guest": response.data}), 404
     
     except Exception as e:
-        log_error("guest",f"/validate/{otp} (GET)", str(e))
         return jsonify({"error": str(e)}), 500
-
 
 # {
 #   "points": 100,
 #   "otp": "123456"
 # }
-# Update Loyalty Points to Guest
-# Get Information from Request Body (guest_id, points, operation (add, subtract))
+# Buy Ticket with Loyalty Points
+# Get Information from Request Body (points, otp)
 @guest_blueprint.route('/buyticketbyloyalty/<int:id>', methods=['PUT'])
 def buyticketbyloyalty(id):
     try:
@@ -276,12 +252,13 @@ def buyticketbyloyalty(id):
             return jsonify({"error": "Failed to update loyalty points, OTP, and otp_valid_datetime"}), 500
 
     except Exception as e:
-        log_error("guest", f"/buyticketbyloyalty/{id} (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
+
 # {
 #   "amount": 150.75,
 #   "otp": "123456"
 # }
+#  Update Loyalty Point + OTP after Purchase with Stripe
 @guest_blueprint.route('/buyticket/<int:id>', methods=['PUT'])
 def buyticket(id):
     try:
@@ -323,10 +300,13 @@ def buyticket(id):
             return jsonify({"error": "Failed to update loyalty points, OTP, or otp_valid_datetime"}), 500
 
     except Exception as e:
-        log_error("guest", f"/buyticket/{id} (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
-    
 
+# {
+#     "amount": 10,
+#     "otp": "123456"
+# }
+#  Update Wallet Balance, Loyalty Point + OTP after Purchase using Wallet
 @guest_blueprint.route('/buyticketfromwallet/<int:id>', methods=['PUT'])
 def buyticketfromwallet(id):
     try:
@@ -380,12 +360,12 @@ def buyticketfromwallet(id):
             return jsonify({"error": "Failed to update wallet, loyalty points, OTP, or otp_valid_datetime"}), 500
 
     except Exception as e:
-        log_error("guest", f"/buyticket/{id} (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
 
-
-# Update Wallet
-# Get Information from Request Body (guest_id, wallet)
+# {
+#     "wallet": -100
+# }
+# Update Wallet Balance (add or minus)
 @guest_blueprint.route('/updatewallet/<int:guest_id>', methods = ['PUT'])
 def update_wallet(guest_id):
     try:
@@ -423,9 +403,7 @@ def update_wallet(guest_id):
             return jsonify({"error": "Failed to update wallet"}), 500
 
     except Exception as e:
-        log_error("guest", f"/updatewallet/{guest_id} (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
-
 
 # Register the guest Blueprint
 app.register_blueprint(guest_blueprint, url_prefix="/guest")
