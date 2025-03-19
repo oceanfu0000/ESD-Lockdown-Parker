@@ -19,15 +19,15 @@ telegramservice_blueprint = Blueprint("telegramservice", __name__)
 TOKEN = os.getenv('TOKEN')
 PROJECT_ID = os.getenv('DIALOGFLOW_PROJECT_ID')
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TOKEN}"
-# WEBHOOK_URL = "https://chilly-years-wash.loca.lt/telegramservice/"
+WEBHOOK_URL = "telegram.esdlockdownparker.org/telegramservice/"
 DIALOGFLOW_PROJECT_ID = PROJECT_ID
 DIALOGFLOW_LANGUAGE_CODE = "en"
 GOOGLE_APPLICATION_CREDENTIALS = "telegramservice/esdlocking.json"
 
-# def set_webhook():
-#     url = f"https://api.telegram.org/bot{TOKEN}/setWebhook"
-#     response = requests.post(url, json={"url": WEBHOOK_URL})
-#     return response.json()
+def set_webhook():
+    url = f"https://api.telegram.org/bot{TOKEN}/setWebhook"
+    response = requests.post(url, json={"url": WEBHOOK_URL})
+    return response.json()
 
 @telegramservice_blueprint.route("/", methods=["POST"])
 def webhook():
@@ -92,7 +92,7 @@ def test_detect_intent():
     print(response)
     
 if __name__ == "__main__":
-    # print(set_webhook())
+    print(set_webhook())
     test_detect_intent();
     app.run(host="0.0.0.0", port=8081, debug=True)
 #endregion

@@ -6,3 +6,4 @@ flask_cors
 stripe
 google-api-python-client
 pika
+amqp-lib

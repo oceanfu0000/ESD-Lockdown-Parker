@@ -1,54 +1,82 @@
+from flask import Flask, Blueprint, jsonify
 import RPi.GPIO as GPIO
-import logging
-import os
-from flask import Blueprint, Flask
-from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from os import environ
 
-#region Create a Flask app
+# Flask app setup
 app = Flask(__name__)
 
-CORS(app)
-
-# Create a Blueprint for Lock Control routes
+# Create a Blueprint for lock control
 lock_blueprint = Blueprint("lock", __name__)
 
-# Register the Lock Control Blueprint
-app.register_blueprint(lock_blueprint, url_prefix="/lock")
-
-#endregion
-
+# GPIO setup
 relay_pin = 18
-
-# Set up logger
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-log_file_path = os.path.join(os.path.dirname(__file__), "logs/lock.log")
-file_handler = logging.FileHandler(log_file_path)
-file_handler.setLevel(logging.INFO)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
-
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(relay_pin, GPIO.IN)
 
-@lock_blueprint.route("/open", methods=["GET"])
+app_lock_open = False
+
 def open_lock():
-    GPIO.setup(relay_pin, GPIO.OUT, initial=GPIO.HIGH)
-    GPIO.output(relay_pin, False)
-    logger.info("lock opening")
-    return "Lock opened"
+    global app_lock_open
+    try:
+        if not app_lock_open:  # Only open if it's currently closed
+            GPIO.setup(relay_pin, GPIO.OUT, initial=GPIO.HIGH)
+            GPIO.output(relay_pin, False)
+            app_lock_open = True
+            print("Lock opened")
+        else:
+            print("Lock is already open")
+    except Exception as e:
+        print(f"Error opening lock: {e}")
 
-@lock_blueprint.route("/close", methods=["GET"])
 def close_lock():
-    GPIO.setup(relay_pin, GPIO.IN)
-    GPIO.input(relay_pin)
-    logger.info("lock closing")
-    return "Lock closed"
+    global app_lock_open
+    try:
+        if app_lock_open:  # Only close if it's currently open
+            GPIO.setup(relay_pin, GPIO.IN)
+            GPIO.input(relay_pin)
+            app_lock_open = False
+            print("Lock closed")
+        else:
+            print("Lock is already closed")
+    except Exception as e:
+        print(f"Error closing lock: {e}")
 
-#region Setting up Flask app
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
-#endregion
+@lock_blueprint.route('/open', methods=['GET'])
+def open_lock_api():
+    try:
+        if not app_lock_open:
+            open_lock()
+            return jsonify({"message": "Lock opened!"}), 200
+        else:
+            return jsonify({"message": "Lock is already open!"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to open lock: {e}"}), 500
+
+@lock_blueprint.route('/close', methods=['GET'])
+def close_lock_api():
+    try:
+        if app_lock_open:
+            close_lock()
+            return jsonify({"message": "Lock closed!"}), 200
+        else:
+            return jsonify({"message": "Lock is already closed!"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to close lock: {e}"}), 500
+
+@lock_blueprint.route('/get_state', methods=['GET'])
+def get_lock_state():
+    try:
+        return jsonify({"lock_state": app_lock_open}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to get lock state: {e}"}), 500
+
+# Register the Blueprint with the Flask app
+app.register_blueprint(lock_blueprint, url_prefix="/lock")
+
+if __name__ == '__main__':
+    try:
+        app.run(host='0.0.0.0', port=8080)
+    except Exception as e:
+        print(f"Flask app encountered an error: {e}")
+    finally:
+        GPIO.cleanup()
+        print("GPIO cleanup completed")
