@@ -5,6 +5,8 @@ from datetime import datetime
 
 import requests
 
+import time
+
 #region Create a Blueprint for enter_park routes
 app = Flask(__name__)
 
@@ -32,8 +34,11 @@ def log_error(service, endpoint, error):
 staff_URL = "http://127.0.0.1:8083/staff"
 guest_URL = "http://127.0.0.1:8082/guest"
 log_URL = "http://127.0.0.1:8084/logs"
-# Not Done Yet
-# door_URL = 
+# Use this when Pi is connected
+door_URL = "https://lock.esdlockdownparker.org/"
+# Use this when Pi isn't connected
+lock_URL = "http://127.0.0.1:8083/testlock"
+
 
 @enter_park_blueprint.route("/guest/<int:otp>", methods=["GET"])
 def guest_enter_park(otp):
@@ -44,8 +49,7 @@ def guest_enter_park(otp):
         
         # Guest Found!
         if r.status_code == 200:
-            print("Guest in DB! Opening Door Now")
-            # TODO: Trigger Door Opening Event
+            open_door()
             return jsonify({"message": "Access granted! Door opening."}), 200
 
     except requests.exceptions.RequestException as e:
@@ -65,7 +69,7 @@ def staff_enter_park():
     
     # Check if Request Body was provided
     if not request.json:
-        return jsonify({"error": "Missing request body"}), 400  # Bad Request
+        return jsonify({"error": "Missing request body"}), 400
 
     try:
         # Check if in Staff DB
@@ -73,8 +77,8 @@ def staff_enter_park():
 
         # Staff Found!
         if(r.status_code == 200):
-            print("Staff in DB! Opening Door Now")
-            # TODO: Trigger Door Opening Event
+            open_door()
+
             try:
                 data = {
                     # Get Staff ID
@@ -86,8 +90,6 @@ def staff_enter_park():
                     }
                 r = requests.post(log_URL,json=data)
 
-                if r.status_code != 201:
-                    print(f"Failed to log entry: {r.status_code} - {r.text}")
             except Exception as e:
                 log_error("enter_park","/staff (POST)", str(e))
                 print(f"Error logging entry: {e}")
@@ -95,7 +97,6 @@ def staff_enter_park():
         # Invalid Password
         elif(r.status_code == 401):
             print("Invalid Password, Please Try Again")
-            # No action needed
         
         elif(r.status_code == 403):
             # TODO: Telegram Notification
@@ -123,6 +124,19 @@ def staff_enter_park():
     except Exception as e:
         log_error("enter_park","/staff (POST)", str(e))
         return jsonify({"error": "Service unavailable"}), 503
+    
+#region Door Opening/Closing
+def open_door():
+    # For Testing Purposes
+    requests.get(lock_URL + "/open")
+    time.sleep(3)
+    requests.get(lock_URL + "/close")
+
+    # Actual Demo
+    requests.get(door_URL + "/open")
+    time.sleep(3)
+    requests.get(door_URL + "/close")
+#endregion
 
 # Register the enter_park Blueprint
 app.register_blueprint(enter_park_blueprint, url_prefix="/enter_park")

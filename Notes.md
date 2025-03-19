@@ -12,9 +12,11 @@ Dahai: followed by the frontend
  - telegram
   -->
 
+Atomic Microservice 
 rabbitMQ will be on port 8078
 error will be on port 8079
 lock MS on port 8080
+testlock MS on port 8080
 
 guest MS on port 8082
 staff MS on port 8083
