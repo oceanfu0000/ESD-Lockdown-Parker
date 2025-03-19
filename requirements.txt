@@ -7,3 +7,5 @@ stripe
 google-api-python-client
 pika
 amqp-lib
+google
+google_auth_oauthlib

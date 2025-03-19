@@ -1,4 +1,5 @@
 from flask import Blueprint, Flask, jsonify, request
+import requests
 from flask_cors import CORS
 import os
 from supabase import create_client, Client
@@ -24,6 +25,21 @@ CORS(app)
 guest_blueprint = Blueprint("guest", __name__)
 #endregion
 
+#region Error Endpoint
+ERROR_MICROSERVICE_URL = "http://127.0.0.1:8079/error"
+
+def log_error(service, endpoint, error):
+    error_data = {
+        "service": service,
+        "endpoint": endpoint,
+        "error": error
+    }
+    try:
+        requests.post(ERROR_MICROSERVICE_URL, json=error_data)
+    except Exception as e:
+        print(f"Failed to log error: {e}")
+#endregion
+
 # Create new guest
 @guest_blueprint.route('/',methods=["POST"])
 def create_guest():
@@ -45,6 +61,7 @@ def create_guest():
             else:
                 return jsonify({"error": "Missing required fields"}), 400
         except Exception as e:
+            log_error("guest","/ (POST)", str(e))
             return jsonify({"error": str(e)}), 500
 
 # Read all guests
@@ -59,16 +76,17 @@ def get_all_guests():
         else:
             return jsonify({"error": "No guest found"}), 404
     except Exception as e:
+        log_error("guest","/ (GET)", str(e))
         return jsonify({"error": str(e)}), 500
 
-# Read a specific staff member by ID
+# Read a specific guest member by ID
 # If no fields specified, return all
 # If field specified (e.g./guest/1?field=loyalty_points), return loyalty_point only
-@guest_blueprint.route('/<int:id>', methods=['GET'])
-def get_guest(id):
+@guest_blueprint.route('/<int:guest_id>', methods=['GET'])
+def get_guest(guest_id):
     try:
         # Fetch guest data from Supabase
-        response = supabase.table("guest").select("*").eq("guest_id", id).execute()
+        response = supabase.table("guest").select("*").eq("guest_id", guest_id).execute()
 
         # If no data is found, return a 404 error
         if not response.data:
@@ -87,6 +105,7 @@ def get_guest(id):
             return jsonify({"guest": guest}), 200
 
     except Exception as e:
+        log_error("guest",f"/{guest_id} (GET)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Update a staff member by ID
@@ -118,6 +137,7 @@ def update_guest(guest_id):
         else:
             return jsonify({"error": "Guest member not found"}), 404
     except Exception as e:
+        log_error("guest",f"/{guest_id} (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Delete a staff member by ID
@@ -138,6 +158,7 @@ def delete_staff(guest_id):
         else:
             return jsonify({"error": "Guest not found"}), 404
     except Exception as e:
+        log_error("guest",f"/{guest_id} (DELETE)", str(e))
         return jsonify({"error": str(e)}), 500
     
 # Check OTP in DB
@@ -154,6 +175,7 @@ def validate(otp):
         return jsonify({"guest": response.data}), 200
     
     except Exception as e:
+        log_error("guest",f"/validate/{otp} (GET)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Update Loyalty Points to Guest
@@ -196,6 +218,7 @@ def update_loyalty():
             return jsonify({"error": "Failed to update loyalty points"}), 500
 
     except Exception as e:
+        log_error("guest","/updateloyalty (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Update Loyalty Points to Guest
@@ -238,6 +261,7 @@ def update_wallet():
             return jsonify({"error": "Failed to update loyalty points"}), 500
 
     except Exception as e:
+        log_error("guest","/updatewallet (PUT)", str(e))
         return jsonify({"error": str(e)}), 500
 
 # Register the guest Blueprint
