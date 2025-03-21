@@ -2,147 +2,159 @@ from flask import Blueprint, request, jsonify, Flask
 from flask_cors import CORS
 import pika
 import requests
-import stripe
 import os
 import RabbitMQClient
 from invokes import invoke_http
-import RabbitMQClient
 
-# RabbitMQ
-
+# RabbitMQ Configuration
 exchange_name = "payment_topic"
 exchange_type = "topic"
-
 
 rabbit_client = RabbitMQClient(
     hostname="localhost",
     port=5672,
-    exchange_name="payment_topic",
-    exchange_type="topic"
+    exchange_name=exchange_name,
+    exchange_type=exchange_type
 )
 
-
-# region Create a Flask app
-
+# Flask App Setup
 app = Flask(__name__)
 CORS(app)
 
-# endregion
-
-# region Create a Blueprint for payment routes
-# Create a Blueprint for Payment routes
+# Blueprint for Payment Routes
 payment_blueprint = Blueprint("payment", __name__)
-# endregion
 
-staff_URL = "http://127.0.0.1:8083/staff"
-guest_URL = "http://127.0.0.1:8082/guest"
-log_URL = "http://127.0.0.1:8084/logs"
-stripe_URL = "http://127.0.0.1:8086/stripeservice"
+# Service URLs
+staff_URL = "http://127.0.0.1:8083/staff"  # Staff service endpoint
+guest_URL = "http://127.0.0.1:8082/guest"  # Guest service endpoint
+log_URL = "http://127.0.0.1:8084/logs"  # Logging service endpoint
+stripe_URL = "http://127.0.0.1:8086/stripeservice"  # Stripe payment service endpoint
+error_URL = "http://127.0.0.1:8088/error"  # Error logging endpoint
 
+# Function to log errors by sending a request to the error logging service
+def log_error(service, endpoint, error):
+    requests.post(error_URL, json={
+        "service": service,
+        "endpoint": endpoint,
+        "error": str(error)
+    })
+
+# Endpoint to handle ticket purchase
 @payment_blueprint.route("/buyticket", methods=["POST"])
 def buyticket():
     try:
-        r = requests.post(f"{stripe_URL}/charges",{request.json['charge']})
-        if r.status_code == 200:
+        # Process payment through Stripe
+        response = invoke_http(f"{stripe_URL}/charges", method="POST", json=request.json['charge'])
+        if response.get("code", 200) == 200:
             try:
-                otp = 123456
-                #need request for OTP
-                #put OTP into guest
-                requests.put(f"{guest_URL}/{request.json['guest_id']}",{"otp":request.json['charge']['otp']})
-                #rabbit to notification service
+                otp = 123456  # Temporary OTP generation
+                # Validate OTP uniqueness
+                while True:
+                    otp_response = invoke_http(f"{guest_URL}/isotpunique/{otp}", method="GET")
+                    if otp_response.get("code", 200) == 200:
+                        break
+                
+                # Associate OTP with the guest and complete ticket purchase
+                invoke_http(f"{guest_URL}/buyticket/{request.json['guest_id']}", method="PUT", json={"otp": otp})
+                
+                # Notify other services via RabbitMQ
                 rabbit_client.channel.basic_publish(
-                                exchange=exchange_name,
-                                routing_key="payment.notification",
-                                body=request.json['guest_id'],
-                                properties=pika.BasicProperties(delivery_mode=2),
-                        )
+                    exchange=exchange_name,
+                    routing_key="payment.notification",
+                    body=request.json['guest_id'],
+                    properties=pika.BasicProperties(delivery_mode=2),
+                )
                 return jsonify({"message": "Payment successful! Ticket purchased."}), 200
-            except requests.exceptions.RequestException as e:
-                print(f"Error communicating with guest service: {e}")
-                return jsonify({"error": "Guest service unavailable. Try again later."}), 503
             except Exception as e:
-                return jsonify(error=str(e)), 400
-            return jsonify({"message": "Payment successful! Ticket purchased."}), 200
-    except requests.exceptions.RequestException as e:
-        print(f"Error communicating with stripe service: {e}")
-        return jsonify({"error": "Stripe service unavailable. Try again later."}), 503
-    
-       
-        return jsonify(charge), 200  # Return the charge details
-    except stripe.error.StripeError as e:
-        return jsonify(error=str(e)), 400
+                log_error("Payment Service", "/buyticket", e)
+                return jsonify({"error": "Guest service unavailable. Try again later."}), 503
     except Exception as e:
-        return jsonify(error=str(e)), 400
-    
+        log_error("Payment Service", "/buyticket", e)
+        return jsonify({"error": "Payment processing failed."}), 400
+
+# Endpoint to handle ticket purchase using loyalty points
+@payment_blueprint.route("/buyticketbyloyalty", methods=["POST"])
+def buyticketbyloyalty():
+    try:
+        response = invoke_http(f"{stripe_URL}/charges", method="POST", json=request.json['charge'])
+        if response.get("code", 200) == 200:
+            try:
+                otp = 123456  # Temporary OTP generation
+                while True:
+                    otp_response = invoke_http(f"{guest_URL}/isotpunique/{otp}", method="GET")
+                    if otp_response.get("code", 200) == 200:
+                        break
+                invoke_http(f"{guest_URL}/buyticketbyloyalty/{request.json['guest_id']}", method="PUT", json={"otp": otp, "points": request.json['amount']})
+                rabbit_client.channel.basic_publish(
+                    exchange=exchange_name,
+                    routing_key="payment.notification",
+                    body=request.json['guest_id'],
+                    properties=pika.BasicProperties(delivery_mode=2),
+                )
+                return jsonify({"message": "Payment successful! Ticket purchased."}), 200
+            except Exception as e:
+                log_error("Payment Service", "/buyticketbyloyalty", e)
+                return jsonify({"error": "Guest service unavailable. Try again later."}), 503
+    except Exception as e:
+        log_error("Payment Service", "/buyticketbyloyalty", e)
+        return jsonify({"error": "Payment processing failed."}), 400
+
+# Endpoint to handle ticket purchase using wallet
+@payment_blueprint.route("/buyticketbywallet", methods=["POST"])
+def buyticketbywallet():
+    try:
+        response = invoke_http(f"{stripe_URL}/charges", method="POST", json=request.json['charge'])
+        if response.get("code", 200) == 200:
+            try:
+                otp = 123456  # Temporary OTP generation
+                while True:
+                    otp_response = invoke_http(f"{guest_URL}/isotpunique/{otp}", method="GET")
+                    if otp_response.get("code", 200) == 200:
+                        break
+                invoke_http(f"{guest_URL}/buyticketfromwallet/{request.json['guest_id']}", method="PUT", json={"otp": otp, "amount": request.json['amount']})
+                rabbit_client.channel.basic_publish(
+                    exchange=exchange_name,
+                    routing_key="payment.notification",
+                    body=request.json['guest_id'],
+                    properties=pika.BasicProperties(delivery_mode=2),
+                )
+                return jsonify({"message": "Payment successful! Ticket purchased."}), 200
+            except Exception as e:
+                log_error("Payment Service", "/buyticketbywallet", e)
+                return jsonify({"error": "Guest service unavailable. Try again later."}), 503
+    except Exception as e:
+        log_error("Payment Service", "/buyticketbywallet", e)
+        return jsonify({"error": "Payment processing failed."}), 400
+
+# Endpoint to handle wallet top-up
 @payment_blueprint.route("/topupwallet", methods=["POST"])
 def topupwallet():
     try:
-        r = requests.post(f"{stripe_URL}/charges",{request.json['charge']})
-        if r.status_code == 200:
+        # Process payment through Stripe
+        response = invoke_http(f"{stripe_URL}/charges", method="POST", json=request.json['charge'])
+        if response.get("code", 200) == 200:
             try:
-                guestWallet = requests.put(f"{guest_URL}/{request.json['guest_id']}",{"wallet":request.json['charge']['amount']})
-                return jsonify({"message": "Payment successful! Wallet Top-up"}), 200
-            except requests.exceptions.RequestException as e:
-                print(f"Error communicating with guest service: {e}")
-                return jsonify({"error": "Guest service unavailable. Try again later."}), 503
-            except Exception as e:
-                return jsonify(error=str(e)), 400
-
-            return jsonify({"message": "Payment successful! Wallet Top-up"}), 200
-    except requests.exceptions.RequestException as e:
-        print(f"Error communicating with stripe service: {e}")
-        return jsonify({"error": "Stripe service unavailable. Try again later."}), 503
-    
-       
-        return jsonify(charge), 200  # Return the charge details
-    except stripe.error.StripeError as e:
-        return jsonify(error=str(e)), 400
-    except Exception as e:
-        return jsonify(error=str(e)), 400
-
-#pay loyalty points
-@payment_blueprint.route("/buyticketbyloyalty", methods=["POST"])
-def buyticket():
-    try:
-        r = requests.post(f"{stripe_URL}/charges",{request.json['charge']})
-        if r.status_code == 200:
-            try:
-                otp = 123456
-                #need request for OTP
-                #get old loyalty points
-                old = requests.get(f"{guest_URL}/{request.json['guest_id']}")
-                old = old.json()['loyalty_points']
-                #put OTP into guest
-                requests.put(f"{guest_URL}/{request.json['guest_id']}",{"otp":request.json['charge']['otp'],'loyalty_points':old-request.json['charge']['amount']})
-                #rabbit to notification service
+                # Update guest wallet balance
+                invoke_http(f"{guest_URL}/updatewallet/{request.json['guest_id']}", method="PUT", json={"wallet": request.json['charge']['amount']})
+                
+                # Notify other services via RabbitMQ
                 rabbit_client.channel.basic_publish(
-                                exchange=exchange_name,
-                                routing_key="payment.notification",
-                                body=request.json['guest_id'],
-                                properties=pika.BasicProperties(delivery_mode=2),
-                        )
-                return jsonify({"message": "Payment successful! Ticket purchased."}), 200
-            except requests.exceptions.RequestException as e:
-                print(f"Error communicating with guest service: {e}")
-                return jsonify({"error": "Guest service unavailable. Try again later."}), 503
+                    exchange=exchange_name,
+                    routing_key="payment.notification",
+                    body=request.json['guest_id'],
+                    properties=pika.BasicProperties(delivery_mode=2),
+                )
+                return jsonify({"message": "Payment successful! Wallet Top-up."}), 200
             except Exception as e:
-                return jsonify(error=str(e)), 400
-            return jsonify({"message": "Payment successful! Ticket purchased."}), 200
-    except requests.exceptions.RequestException as e:
-        print(f"Error communicating with stripe service: {e}")
-        return jsonify({"error": "Stripe service unavailable. Try again later."}), 503
-    
-       
-        return jsonify(charge), 200  # Return the charge details
-    except stripe.error.StripeError as e:
-        return jsonify(error=str(e)), 400
+                log_error("Payment Service", "/topupwallet", e)
+                return jsonify({"error": "Guest service unavailable. Try again later."}), 503
     except Exception as e:
-        return jsonify(error=str(e)), 400
+        log_error("Payment Service", "/topupwallet", e)
+        return jsonify({"error": "Payment processing failed."}), 400
 
+# Register the payment blueprint with Flask app
+app.register_blueprint(payment_blueprint, url_prefix="/makepayment")
 
-app.register_blueprint(payment_blueprint, url_prefix="/stripeservice")
-# region Setting up Flask app
-
+# Start Flask server
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8087, debug=True)
-# endregion
