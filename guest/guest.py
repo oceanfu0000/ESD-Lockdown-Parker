@@ -101,13 +101,14 @@ def get_guest(guest_id):
 #     "otp": "123456",
 #     "loyalty_points": 100,
 #     "otp_valid_datetime": "2025-03-19T10:00:00+00:00"
+#     "chat_id": 12345678
 # }
 
 @guest_blueprint.route('/<int:guest_id>', methods=['PUT'])
 def update_guest(guest_id):
     try:
         data = request.json
-        required_fields = {"guest_name", "guest_email", "guest_tele", "wallet", "otp", "loyalty_points", "otp_valid_datetime"}
+        required_fields = {"guest_name", "guest_email", "guest_tele", "wallet", "otp", "loyalty_points", "otp_valid_datetime","chat_id"}
         
         if required_fields.issubset(data):
             # Parse the otp_valid_datetime to datetime object with timezone
@@ -122,6 +123,7 @@ def update_guest(guest_id):
                 "otp": data["otp"],
                 "loyalty_points": data["loyalty_points"],
                 "otp_valid_datetime": otp_valid_datetime.isoformat()
+                "chat_id": data["chat_id"]
             }).eq("guest_id", guest_id).execute()
 
             if response.data:
