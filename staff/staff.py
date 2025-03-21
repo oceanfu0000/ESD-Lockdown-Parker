@@ -24,21 +24,6 @@ staff_blueprint = Blueprint("staff", __name__)
 
 #endregion
 
-#region Error Endpoint
-ERROR_MICROSERVICE_URL = "http://127.0.0.1:8079/error"
-
-def log_error(service, endpoint, error):
-    error_data = {
-        "service": service,
-        "endpoint": endpoint,
-        "error": error
-    }
-    try:
-        requests.post(ERROR_MICROSERVICE_URL, json=error_data)
-    except Exception as e:
-        print(f"Failed to log error: {e}")
-#endregion
-
 # Create a new staff member
 @staff_blueprint.route("/", methods=["POST"])
 def create_staff():
