@@ -7,6 +7,7 @@ from flask_cors import CORS
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from flasgger import Swagger
 
 #region Supabase Set Up
 # Get .env file
@@ -25,12 +26,36 @@ app = Flask(__name__)
 
 CORS(app)
 
+Swagger(app)
+
 guest_blueprint = Blueprint("guest", __name__)
 #endregion
 
 # Create new guest
 @guest_blueprint.route('/',methods=["POST"])
 def create_guest():
+        """
+    Create a new staff member
+    ---
+    parameters:
+      - name: staff_name
+        in: body
+        type: string
+        required: true
+      - name: password
+        in: body
+        type: string
+        required: true
+      - name: staff_tele
+        in: body
+        type: string
+        required: true
+    responses:
+      201:
+        description: Staff member created successfully
+      400:
+        description: Missing required fields or creation failed
+    """
         try:
             data = request.json
             if "guest_name" in data and "guest_email" in data and "guest_tele" in data:
