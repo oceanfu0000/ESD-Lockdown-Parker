@@ -122,7 +122,7 @@ def update_guest(guest_id):
                 "wallet": data["wallet"],
                 "otp": data["otp"],
                 "loyalty_points": data["loyalty_points"],
-                "otp_valid_datetime": otp_valid_datetime.isoformat()
+                "otp_valid_datetime": otp_valid_datetime.isoformat(),
                 "chat_id": data["chat_id"]
             }).eq("guest_id", guest_id).execute()
 
