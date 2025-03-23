@@ -27,5 +27,5 @@ app.register_blueprint(testlock_blueprint, url_prefix="/testlock")
 
 #region Setting up Flask app
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8083, debug=True)
+    app.run(host="0.0.0.0", port=8079, debug=True)
 #endregion

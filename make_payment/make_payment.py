@@ -29,7 +29,7 @@ staff_URL = "http://127.0.0.1:8083/staff"  # Staff service endpoint
 guest_URL = "http://127.0.0.1:8082/guest"  # Guest service endpoint
 log_URL = "http://127.0.0.1:8084/logs"  # Logging service endpoint
 stripe_URL = "http://127.0.0.1:8086/stripeservice"  # Stripe payment service endpoint
-error_URL = "http://127.0.0.1:8088/error"  # Error logging endpoint
+error_URL = "http://127.0.0.1:8078/error"  # Error logging endpoint
 
 # Function to log errors by sending a request to the error logging service
 def log_error(service, endpoint, error):

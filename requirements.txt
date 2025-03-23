@@ -9,3 +9,4 @@ pika
 google
 google_auth_oauthlib
 pytz
+flasgger

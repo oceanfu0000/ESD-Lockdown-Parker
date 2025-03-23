@@ -8,9 +8,8 @@ import pika
 
 amqp_host = "localhost"
 amqp_port = 5672
-exchange_name = "order_topic"
+exchange_name = "park_topic"
 exchange_type = "topic"
-
 
 def create_exchange(hostname, port, exchange_name, exchange_type):
     print(f"Connecting to AMQP broker {hostname}:{port}...")
@@ -48,7 +47,6 @@ def create_queue(channel, exchange_name, queue_name, routing_key):
         exchange=exchange_name, queue=queue_name, routing_key=routing_key
     )
 
-
 channel = create_exchange(
     hostname=amqp_host,
     port=amqp_port,
@@ -60,12 +58,12 @@ create_queue(
     channel=channel,
     exchange_name=exchange_name,
     queue_name="Error",
-    routing_key="*.error",
+    routing_key="error.*",
 )
 
 create_queue(
     channel=channel,
     exchange_name=exchange_name,
-    queue_name="Activity_Log",
-    routing_key="#",
+    queue_name="Access",
+    routing_key="access.*",
 )

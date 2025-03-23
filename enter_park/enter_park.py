@@ -7,37 +7,44 @@ import requests
 
 import time
 
-#region Create a Blueprint for enter_park routes
+import pika
+import sys
+import os
+import json
+# Add the parent directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Now you can import RabbitMQClient
+from RabbitMQClient import RabbitMQClient  # Import the class from the module
+
+#region RabbitMQ Configuration
+exchange_name = "park_topic"
+exchange_type = "topic"
+
+rabbit_client = RabbitMQClient(
+    hostname="localhost",
+    port=5672,
+    exchange_name=exchange_name,
+    exchange_type=exchange_type
+)
+#endregion
+
+# Flask App Setup
 app = Flask(__name__)
 
 CORS(app)
 
+# Blueprint for Enter Park Routes
 enter_park_blueprint = Blueprint("enter_park", __name__)
 
-#endregion
-
-#region Error Endpoint
-ERROR_MICROSERVICE_URL = "http://127.0.0.1:8079/error"
-
-def log_error(service, endpoint, error):
-    error_data = {
-        "service": service,
-        "endpoint": endpoint,
-        "error": error
-    }
-    try:
-        requests.post(ERROR_MICROSERVICE_URL, json=error_data)
-    except Exception as e:
-        print(f"Failed to log error: {e}")
-#endregion
-
+error_URL = "http://127.0.0.1:8078/error"
 staff_URL = "http://127.0.0.1:8083/staff"
 guest_URL = "http://127.0.0.1:8082/guest"
-log_URL = "http://127.0.0.1:8084/logs"
+# log_URL = "http://127.0.0.1:8084/accesslogs"
 # Use this when Pi is connected
-door_URL = "https://lock.esdlockdownparker.org/"
+# lock_URL = "https://lock.esdlockdownparker.org/"
 # Use this when Pi isn't connected
-lock_URL = "http://127.0.0.1:8083/testlock"
+lock_URL = "http://127.0.0.1:8079/testlock"
 
 
 @enter_park_blueprint.route("/guest/<int:otp>", methods=["GET"])
@@ -53,7 +60,19 @@ def guest_enter_park(otp):
             return jsonify({"message": "Access granted! Door opening."}), 200
 
     except requests.exceptions.RequestException as e:
-        log_error("enter_park",f"/guest/{otp} (GET)", str(e))
+
+        # log_error("enter_park",f"/guest/{otp} (GET)", str(e))
+        message = {
+            "service":"enter_park",
+            "endpoint": f"/guest/{otp} (GET)",
+            "error": str(e)
+            }
+        rabbit_client.channel.basic_publish(
+                    exchange=exchange_name,
+                    routing_key="enterpark.error",
+                    body=json.dumps(message),
+                    properties=pika.BasicProperties(delivery_mode=2),
+                )
         return jsonify({"error": "Guest service unavailable. Try again later."}), 503
 
     # TODO: Change the guest_URL to the right one
@@ -88,12 +107,26 @@ def staff_enter_park():
                     "message": f"Staff member {r.json()['Staff']['staff_name']} entered the Park!",
                     "date_time": datetime.now().isoformat()
                     }
-                r = requests.post(log_URL,json=data)
-
+                rabbit_client.channel.basic_publish(
+                    exchange=exchange_name,
+                    routing_key="enterpark.access",
+                    body=json.dumps(data),
+                    properties=pika.BasicProperties(delivery_mode=2),
+                    )
             except Exception as e:
-                log_error("enter_park","/staff (POST)", str(e))
-                print(f"Error logging entry: {e}")
-
+                message = {
+                    "service":"enter_park",
+                    "endpoint": "/staff (POST)",
+                    "error": str(e)
+                    }
+                rabbit_client.channel.basic_publish(
+                    exchange=exchange_name,
+                    routing_key="enterpark.error",
+                    body=json.dumps(message),
+                    properties=pika.BasicProperties(delivery_mode=2),
+                    )
+                return jsonify({"error": "Staff service unavailable. Try again later."}), 503
+            
         # Invalid Password
         elif(r.status_code == 401):
             print("Invalid Password, Please Try Again")
@@ -108,12 +141,29 @@ def staff_enter_park():
                     "message": f"Staff member {r.json()['Staff']['staff_name']} attempted to access the park but failed.",
                     "date_time": datetime.now().isoformat()
                 }
-                r = requests.post(log_URL,json=data)
-
+                rabbit_client.channel.basic_publish(
+                    exchange=exchange_name,
+                    routing_key="enterpark.access",
+                    body=json.dumps(data),
+                    properties=pika.BasicProperties(delivery_mode=2),
+                )
+                
                 if r.status_code != 201:
                     print(f"Failed to log entry: {r.status_code} - {r.text}")
             except Exception as e:
-                log_error("enter_park","/staff (POST)", str(e))
+                message = {
+                    "service":"enter_park",
+                    "endpoint": "/staff (POST)",
+                    "error": str(e)
+                    }
+                
+                rabbit_client.channel.basic_publish(
+                    exchange=exchange_name,
+                    routing_key="enterpark.error",
+                    body=json.dumps(message),
+                    properties=pika.BasicProperties(delivery_mode=2),
+                    )
+                # log_error("enter_park","/staff (POST)", str(e))
                 print(f"Error logging entry: {e}")
         
         else:
@@ -122,10 +172,20 @@ def staff_enter_park():
         return r.json(), r.status_code
     
     except Exception as e:
-        log_error("enter_park","/staff (POST)", str(e))
+        message = {
+            "service":"enter_park",
+            "endpoint": "/staff (POST)",
+            "error": str(e)
+            }
+        rabbit_client.channel.basic_publish(
+            exchange=exchange_name,
+            routing_key="enterpark.error",
+            body=json.dumps(message),
+            properties=pika.BasicProperties(delivery_mode=2),
+            )
+        # log_error("enter_park","/staff (POST)", str(e))
         return jsonify({"error": "Service unavailable"}), 503
     
-#region Door Opening/Closing
 def open_door():
     # For Testing Purposes
     requests.get(lock_URL + "/open")
@@ -133,10 +193,9 @@ def open_door():
     requests.get(lock_URL + "/close")
 
     # Actual Demo
-    requests.get(door_URL + "/open")
-    time.sleep(3)
-    requests.get(door_URL + "/close")
-#endregion
+    # requests.get(door_URL + "/open")
+    # time.sleep(3)
+    # requests.get(door_URL + "/close")
 
 # Register the enter_park Blueprint
 app.register_blueprint(enter_park_blueprint, url_prefix="/enter_park")
