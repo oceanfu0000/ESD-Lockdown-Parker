@@ -31,71 +31,84 @@
         </div>
         <div class="mb-3">
             <label class="form-label">Number of Tickets</label>
-            <input type="number" class="form-control" required min="1">
+            <input type="number" class="form-control" id="ticket-count" required min="1">
         </div>
         <div class="mb-3">
             <label class="form-label">Payment Method</label>
             <select class="form-control">
-                <option>Credit Card</option>
-                <option>Debit Card</option>
-                <option>PayPal</option>
+                <option>Credit/Debit Card</option>
             </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Total Cost</label>
+            <input type="text" class="form-control" id="total-cost" readonly>
         </div>
         <button type="submit" id="submit" class="btn btn-warning">Buy Now</button>
     </form>
 </body>
 
 <script>
+
+
+    // fermin got this working hehe
+    // all credit to fermin 
+    const ticket_price = 10000;
+    const ticket_quantity = document.getElementById("ticket-count");
+    ticket_quantity.addEventListener("input" , (event)=> {
+        const ticket_total_cost = ticket_price * event.target.value;
+        document.getElementById("total-cost").value = ticket_total_cost;
+    })
+
     document.addEventListener("DOMContentLoaded", function () {
-    var stripe = Stripe("pk_test_51R2qxUJfYtguBcSFQN3y7lCtQnsKcmhXefXmdyHJLb0TIA1TS7VFIvmUD51bEkrInKnJiNYAkJZ4mG4hpzsjijSB00e1FKcQDO");
-    var elements = stripe.elements();
-    var card = elements.create('card');
-    card.mount('#card-element');
+        var stripe = Stripe("pk_test_51R2qxUJfYtguBcSFQN3y7lCtQnsKcmhXefXmdyHJLb0TIA1TS7VFIvmUD51bEkrInKnJiNYAkJZ4mG4hpzsjijSB00e1FKcQDO");
+        var elements = stripe.elements();
+        var card = elements.create('card');
+        card.mount('#card-element');
 
-    var form = document.getElementById('payment-form');
-    var submitButton = document.getElementById('submit');
+        var form = document.getElementById('payment-form');
+        var submitButton = document.getElementById('submit');
 
-    form.addEventListener('submit', async function (event) {
-        event.preventDefault();
-        submitButton.disabled = true; // Prevent multiple submissions
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            submitButton.disabled = true; // Prevent multiple submissions
 
-        const { token, error } = await stripe.createToken(card);
+            const { token, error } = await stripe.createToken(card);
 
-        if (error) {
-            alert(error.message);
-            console.error(error);
-            submitButton.disabled = false; // Re-enable button
-        } else {
-            try {
-                const response = await fetch('http://127.0.0.1:8086/payment/buyticket', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        amount: 1000, // Amount in cents
-                        currency: 'sgd',
-                        description: 'Ticket Purchase',
-                        source: token.id
-                    })
-                });
-                console.log(response);
-                const result = await response.json();
-
-                if (response.ok) {
-                    alert('Payment successful!');
-                    console.log(result);
-                    form.reset();
-                } else {
-                    alert('Payment failed: ' + result.error);
-                }
-            } catch (error) {
-                alert('Payment request failed. Please try again.');
+            if (error) {
+                alert(error.message);
                 console.error(error);
-            } finally {
-                submitButton.disabled = false;
+                submitButton.disabled = false; // Re-enable button
+            } else {
+                try {
+                    const response = await fetch('http://127.0.0.1:8086/payment/buyticket', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            amount: ticket_price, // Amount in cents
+                            currency: 'sgd',
+                            description: 'Ticket Purchase',
+                            source: token.id
+                        })
+                    });
+                    console.log(response);
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert('Payment successful!');
+                        console.log(result);
+                        form.reset();
+                    } else {
+                        alert('Payment failed: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('Payment request failed. Please try again.');
+                    console.error(error);
+                } finally {
+                    submitButton.disabled = false;
+                }
             }
-        }
+        });
     });
-});
 
 </script>
 
