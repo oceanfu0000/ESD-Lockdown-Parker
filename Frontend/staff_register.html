@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Register</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
 </head>
 <body class="container mt-5">
     <div id="navbar-placeholder"></div>
@@ -20,17 +21,48 @@
     <form>
         <div class="mb-3">
             <label class="form-label">Name reminder to self, Page Title is covered by navbar</label>
-            <input type="text" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Telephone</label>
-            <input type="tel" class="form-control" required>
+            <input type="text" id="name" class="form-control" required>
         </div>
         <div class="mb-3">
             <label class="form-label">Password</label>
-            <input type="password" class="form-control" required>
+            <input type="password" id="password" class="form-control" required>
         </div>
-        <button type="submit" class="btn btn-primary">Register</button>
+        <div class="mb-3">
+            <label class="form-label">Telegram Handle</label>
+            <input type="text" id="telehandle" class="form-control" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" onclick="register()">Register</button>
     </form>
 </body>
+<script> //WOULD NOT WORK FOR END POINT SINCE THERE IS NO PYTHON FILE HERE
+    function register(){
+        const name = document.getElementById("name").value;
+        const telehandle = document.getElementById("telehandle").value;
+        const password = document.getElementById("password").value;
+        
+        if (!name || !password || !telehandle) {
+            alert("Please enter all fields");
+            return;
+        };
+        const staffData = {
+            name: name,
+            telehandle: telehandle,
+            password: password
+        };
+
+        axios.post('http://127.0.0.1:8083/staff', staffData)
+            .then(response => {
+                alert('Registration successful!');
+                console.log(response.data);
+                window.location.href = 'staff_door.html';
+            })
+            .catch(error => {
+                alert('Registration failed. Please try again.');
+                console.error('Error:', error);
+            });
+    }
+
+
+</script>
 </html>
