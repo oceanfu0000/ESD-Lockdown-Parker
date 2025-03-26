@@ -43,11 +43,13 @@
             font-size: 17px;
             opacity: 0;
             transition: opacity 0.5s, visibility 0.5s;
-        }
-        #toast.show {
+            }
+
+            #toast.show {
             visibility: visible;
             opacity: 1;
-        }
+            }
+        
     </style>
 </head>
 <body class="bg-light">
@@ -60,8 +62,9 @@
             })
             .catch(error => console.error("Error loading the navbar:", error));
     </script>
-    <div id="toast">you failed!</div>
     <div class="form-box">
+        <div id="toast">empty toast message</div>
+
         <h2>Guest Door -> Successful/Failed</h2>
         <input type="text" id="otp_value" class="form-control" placeholder="Enter OTP" required>
         <!-- <button class="btn btn-primary">Unlock</button> -->
@@ -77,33 +80,39 @@
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <script>
-
     function showToast(message) {
-        const toast = document.getElementById("toast");
-        toast.textContent = message; // Set the message
-        toast.classList.add("show");
+      const toast = document.getElementById("toast");
+      toast.textContent = message; // Set the message
+      toast.classList.add("show");
 
-        // Hide after 3 seconds
-        setTimeout(() => {
-            toast.classList.remove("show");
-        }, 3000);
+      // Hide after 3 seconds
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
     }
-
     async function checkOTP() {
+        const inputValue = document.getElementById("otp_value").value;
+        let statusCode = 0;
         try {
-            const inputValue = document.getElementById("otp_value").value;
             const response = await axios.get ('http://127.0.0.1:8082/guest/validate/' + inputValue);
-            console.log(response);
-            console.log(response.status);
-            showToast("valid OTP! youre in!");
-
-        } catch {
-            showToast("you failed you lousy shit!");
-
-        };
-        
-        
-
-        // i need to put try catch logic here
+            // console.log(response);
+            statusCode = response.status;
+            console.log(statusCode);
+            window.location.href = "guest_entry_successful.html";
+        } catch (error) {
+            // console.error("Caught Axios error:", {
+            //     message: error.message,
+            //     code: error.code,
+            //     status: error.response?.status,
+            //     statusText: error.response?.statusText,
+            //     data: error.response?.data.message,
+            //     fullError: error
+            // });
+            statusCode = error.response?.status;
+            console.log(statusCode);
+            let errorMessage = error.response?.data.message
+            console.log(errorMessage);
+            showToast(errorMessage);
+        }
     }
 </script>
