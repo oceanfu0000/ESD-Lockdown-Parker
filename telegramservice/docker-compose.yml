@@ -1,0 +1,13 @@
+services:
+  my-python-app:
+    container_name: telegramservice
+    build: .
+    ports:
+      - "8081:8081"  # Expose the port for your Flask app
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./esdlocking.json:/app/esdlocking.json  # Mount the credentials file to the container
+      - ./cloudflared:/etc/cloudflared  # Mount the Cloudflared directory to the container
+      - ./cloudflared:/app/cloudflared  # Mount the Cloudflared directory to the container

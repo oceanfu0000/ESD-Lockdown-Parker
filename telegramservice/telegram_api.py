@@ -22,12 +22,26 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{TOKEN}"
 WEBHOOK_URL = "telegram.esdlockdownparker.org/telegramservice/"
 DIALOGFLOW_PROJECT_ID = PROJECT_ID
 DIALOGFLOW_LANGUAGE_CODE = "en"
-GOOGLE_APPLICATION_CREDENTIALS = "telegramservice/esdlocking.json"
+# GOOGLE_APPLICATION_CREDENTIALS = "telegramservice/esdlocking.json"
+GOOGLE_APPLICATION_CREDENTIALS = '/app/esdlocking.json'
 
 def set_webhook():
     url = f"https://api.telegram.org/bot{TOKEN}/setWebhook"
     response = requests.post(url, json={"url": WEBHOOK_URL})
     return response.json()
+
+@telegramservice_blueprint.route("/health", methods=["GET"])
+def health_check():
+    try:
+        return "Healthy", 200
+    except Exception as e:
+        print(f"Health check failed: {e}")
+        return "Service Unavailable", 503
+
+@telegramservice_blueprint.route("/googleTest", methods=["GET"])
+def googleTest():
+        return test_detect_intent(), 200
+
 
 @telegramservice_blueprint.route("/", methods=["POST"])
 def webhook():
@@ -90,10 +104,11 @@ def test_detect_intent():
     text = "Hello"
     response = detect_intent_from_dialogflow(session_id, text)
     print(response)
+    return response
     
 if __name__ == "__main__":
     print(set_webhook())
-    test_detect_intent();
     app.run(host="0.0.0.0", port=8081, debug=True)
+
 #endregion
 
