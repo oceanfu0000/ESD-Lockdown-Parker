@@ -20,7 +20,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     hostname: parker-rabbit
-    restart: always
+    restart: on-failure
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -61,7 +61,7 @@ services:
     depends_on:
       - rabbitmq-init
       - rabbitmq # Ensure RabbitMQ is running before starting the consumer
-    restart: always
+    restart: on-failure
   staff:
     depends_on:
       - rabbitmq
