@@ -79,7 +79,7 @@ docker compose down
 💡 **A:**
 
 1. **Missing `credentials.json`?**  
-   Make sure you have the `credentials.json` file. If you don't, check the telegram chat for details on how to get it.
+   Make sure you have the `credentials.json` file. If you don't, check the telegram chat for it.
 
 2. **Token expired or missing?**  
    If your token has expired or doesn't exist, follow these steps:
@@ -106,7 +106,7 @@ docker compose down
 
    After successfully logging in, a token will be generated, and you can restart the services with:
    ```
-   docker compose up
+   docker compose up --build -d
    ```
 ---
 
