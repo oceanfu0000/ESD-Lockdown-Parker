@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, request, jsonify, Flask
 from flask_cors import CORS
 import pika
@@ -32,6 +33,7 @@ guest_URL = "http://127.0.0.1:8082/guest"  # Guest service endpoint
 log_URL = "http://127.0.0.1:8084/logs"  # Logging service endpoint
 stripe_URL = "http://127.0.0.1:8086/stripeservice"  # Stripe payment service endpoint
 error_URL = "http://127.0.0.1:8078/error"  # Error logging endpoint
+otp_URL = os.getenv('OTP_URL')  # OTP service endpoint
 
 # Function to log errors by sending a request to the error logging service
 def log_error(service, endpoint, error):
@@ -49,21 +51,21 @@ def buyticket():
         response = invoke_http(f"{stripe_URL}/charges", method="POST", json=request.json['charge'])
         if response.get("code", 200) == 200:
             try:
-                otp = 123456  # Temporary OTP generation
                 # Validate OTP uniqueness
                 while True:
-                    otp_response = invoke_http(f"{guest_URL}/isotpunique/{otp}", method="GET")
+                    otp_response = invoke_http(f"{otp_URL}/isotpunique/{request.json['otp']}", method="GET")
+                    otp_response = invoke_http(f"{guest_URL}/isotpunique/{otp_response}", method="GET")
                     if otp_response.get("code", 200) == 200:
                         break
                 
                 # Associate OTP with the guest and complete ticket purchase
-                invoke_http(f"{guest_URL}/buyticket/{request.json['guest_id']}", method="PUT", json={"otp": otp})
+                invoke_http(f"{guest_URL}/buyticket/{request.json['guest_id']}", method="PUT", json={"otp": otp_response})
                 
                 # Notify other services via RabbitMQ
                 rabbit_client.channel.basic_publish(
                     exchange=exchange_name,
                     routing_key="payment.notification",
-                    body=request.json['guest_id'],
+                    body=json.dumps(request.json['guest_id']), #json.dumps(message) might need this
                     properties=pika.BasicProperties(delivery_mode=2),
                 )
                 return jsonify({"message": "Payment successful! Ticket purchased."}), 200
@@ -81,9 +83,10 @@ def buyticketbyloyalty():
         response = invoke_http(f"{stripe_URL}/charges", method="POST", json=request.json['charge'])
         if response.get("code", 200) == 200:
             try:
-                otp = 123456  # Temporary OTP generation
+                # Validate OTP uniqueness
                 while True:
-                    otp_response = invoke_http(f"{guest_URL}/isotpunique/{otp}", method="GET")
+                    otp_response = invoke_http(f"{otp_URL}/isotpunique/{request.json['otp']}", method="GET")
+                    otp_response = invoke_http(f"{guest_URL}/isotpunique/{otp_response}", method="GET")
                     if otp_response.get("code", 200) == 200:
                         break
                 invoke_http(f"{guest_URL}/buyticketbyloyalty/{request.json['guest_id']}", method="PUT", json={"otp": otp, "points": request.json['amount']})
@@ -108,9 +111,10 @@ def buyticketbywallet():
         response = invoke_http(f"{stripe_URL}/charges", method="POST", json=request.json['charge'])
         if response.get("code", 200) == 200:
             try:
-                otp = 123456  # Temporary OTP generation
+                # Validate OTP uniqueness
                 while True:
-                    otp_response = invoke_http(f"{guest_URL}/isotpunique/{otp}", method="GET")
+                    otp_response = invoke_http(f"{otp_URL}/isotpunique/{request.json['otp']}", method="GET")
+                    otp_response = invoke_http(f"{guest_URL}/isotpunique/{otp_response}", method="GET")
                     if otp_response.get("code", 200) == 200:
                         break
                 invoke_http(f"{guest_URL}/buyticketfromwallet/{request.json['guest_id']}", method="PUT", json={"otp": otp, "amount": request.json['amount']})
@@ -139,13 +143,6 @@ def topupwallet():
                 # Update guest wallet balance
                 invoke_http(f"{guest_URL}/updatewallet/{request.json['guest_id']}", method="PUT", json={"wallet": request.json['charge']['amount']})
                 
-                # Notify other services via RabbitMQ
-                rabbit_client.channel.basic_publish(
-                    exchange=exchange_name,
-                    routing_key="payment.notification",
-                    body=request.json['guest_id'],
-                    properties=pika.BasicProperties(delivery_mode=2),
-                )
                 return jsonify({"message": "Payment successful! Wallet Top-up."}), 200
             except Exception as e:
                 log_error("Payment Service", "/topupwallet", e)
