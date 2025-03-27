@@ -69,11 +69,11 @@
         <div id="toast">empty toast message</div>
           
 
-        <h2>Guest Door -> Successful/Failed</h2>
+        <h2>Guest Door</h2>
         <input type="text" id="otp_value" class="form-control" placeholder="Enter OTP" required>
         <!-- <button class="btn btn-primary">Unlock</button> -->
          <div class="d-flex justify-content-around">
-            <button class="btn" style="background-color:#29C0E6" onclick="checkOTP()">enter (validates OTP, refer to console)</button>
+            <button class="btn" style="background-color:#29C0E6" onclick="checkOTP()">Enter Park!</button>
          </div>
         
     </div>
@@ -97,12 +97,9 @@
     }
     async function checkOTP() {
         const inputValue = document.getElementById("otp_value").value;
-        let statusCode = 0;
+        let sentence = 'http://127.0.0.1:8085/enter_park/guest/' + inputValue;
         try {
-            const response = await axios.get ('http://127.0.0.1:8082/guest/validate/' + inputValue);
-            // console.log(response);
-            statusCode = response.status;
-            console.log(statusCode);
+            const response = await axios.get (sentence);
             window.location.href = "guest_entry_successful.html";
         } catch (error) {
             // console.error("Caught Axios error:", {
@@ -113,10 +110,7 @@
             //     data: error.response?.data.message,
             //     fullError: error
             // });
-            statusCode = error.response?.status;
-            console.log(statusCode);
             let errorMessage = error.response?.data.message
-            console.log(errorMessage);
             showToast(errorMessage);
         }
     }
