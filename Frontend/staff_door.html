@@ -48,31 +48,43 @@
             .catch(error => console.error("Error loading the navbar:", error));
     </script>
     <script>
-        // import axios from 'axios';
-        function validate() {
+        function showToast(message) { //change your toast here 
+        const toast = document.getElementById("toast");
+        toast.textContent = message; // Set the message
+        toast.classList.add("show");
+
+        // Hide after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000);
+        }
+
+        async function validate() {
             const staff_name = document.getElementById("staff_name").value;
             const password = document.getElementById("password").value;
 
-            if (!staff_name || !password) {
-                alert("Please enter both Name and Password");
+            if (!staff_name || !password) { 
+                // showToast("Please enter both Name and Password"); //uncomment this once toast is working
+                alert("Please enter both Name and Password"); //comment once toast working
                 return;
             };
 
-            const loginData = {
+            const loginData = { //to send to post request
                 staff_name: staff_name,
                 password: password
             };
 
-            axios.post("http://127.0.0.1:8083/staff/validate", loginData)
-                .then(response => {
-                    // alert("Login Successful!");
-                    console.log("Response:", response.data);
-                    window.location.href = "staff_landing.html";
-                })
-                .catch(error => {
-                    alert("Login Failed. Please check your Name or Password.");
-                    console.error("Error:", error);
-                });
+            try {
+                const response = await axios.post("http://127.0.0.1:8085/enter_park/staff", loginData);
+                console.log("Login Successful:", response.data); 
+                showToast("Login Successful"); //toast message
+                window.location.href = "staff_landing.html"; // Redirect to staff landing page on success
+            } catch (error) {
+                console.error("Login Failed:", error);
+                alert("Login Failed. Please check your Name or Password."); //comment out alert once the toast works
+                // showToast("Login Failed. Please check your Name or Password."); //uncomment this once toast is working
+            }
+
         }
 
     </script>
