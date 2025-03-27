@@ -1,0 +1,184 @@
+# To Run
+# docker-compose up --build -d
+
+# To Close
+# docker compose down
+
+# Volumes definition
+volumes:
+  rabbitmq_data:
+    name: parker_rabbitmq_data
+
+# Networks definition
+networks:
+  parker-net:
+    driver: bridge
+    name: parker-net
+
+# Services definition
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: parker-rabbit
+    restart: on-failure
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - parker-net
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  rabbitmq-init:
+    build: .
+    container_name: rabbitmq-init
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    entrypoint: [ "/bin/bash", "-c", "./init-rabbitmq.sh" ]
+    volumes:
+      - .:/app
+    working_dir: /app
+    networks:
+      - parker-net
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: "no" # Runs only once
+  rabbitmq-consumer:
+    build:
+      context: . # Build from the root of the project
+      dockerfile: ./consumer/Dockerfile # Specify the path to your Dockerfile
+    env_file:
+      - .env # Reference the .env file for environment variables
+    environment:
+      - PYTHONUNBUFFERED=1 # Ensure output is not buffered
+    networks:
+      - parker-net # Connect to the same network
+    depends_on:
+      - rabbitmq-init
+      - rabbitmq # Ensure RabbitMQ is running before starting the consumer
+    restart: on-failure
+  staff:
+    depends_on:
+      - rabbitmq
+      - rabbitmq-init
+    build:
+      context: . # Build from the root of the project
+      dockerfile: ./staff/Dockerfile # Specify the path to the Dockerfile in the staff directory
+    env_file:
+      - .env # Reference the .env file in the root of the project
+    ports:
+      - "8083:8083" # Map the port from the container to the host
+    networks:
+      - parker-net # Connect the staff service to the parker-net network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+  guest:
+    depends_on:
+      - rabbitmq
+      - rabbitmq-init
+    build:
+      context: . # Build from the root of the project
+      dockerfile: ./guest/Dockerfile # Specify the path to the Dockerfile in the guest directory
+    env_file:
+      - .env # Reference the .env file in the root of the project
+    ports:
+      - "8082:8082" # Map the port from the container to the host
+    networks:
+      - parker-net # Connect the guest service to the parker-net network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+  accesslogs:
+    depends_on:
+      - rabbitmq
+      - rabbitmq-init
+    build:
+      context: . # Build from the root of the project
+      dockerfile: ./accesslogs/Dockerfile # Specify the path to the Dockerfile in the accesslogs directory
+    env_file:
+      - .env # Reference the .env file in the root of the project
+    ports:
+      - "8084:8084" # Map the port from the container to the host
+    networks:
+      - parker-net # Connect the accesslogs service to the parker-net network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+  error:
+    depends_on:
+      - rabbitmq
+      - rabbitmq-init
+    build:
+      context: . # Build from the root of the project
+      dockerfile: ./error/Dockerfile # Specify the path to the Dockerfile in the error directory
+    env_file:
+      - .env # Reference the .env file in the root of the project
+    ports:
+      - "8078:8078" # Map the port from the container to the host
+    networks:
+      - parker-net # Connect the error service to the parker-net network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+  emailservice:
+    depends_on:
+      - rabbitmq
+      - rabbitmq-init
+    build:
+      context: . # Build from the root of the project
+      dockerfile: ./emailservice/Dockerfile # Specify the path to the Dockerfile in the error directory
+    env_file:
+      - .env # Reference the .env file in the root of the project
+    ports:
+      - "8088:8088" # Map the port from the container to the host
+    networks:
+      - parker-net # Connect the error service to the parker-net network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+  stripeservice:
+    depends_on:
+      - rabbitmq
+      - rabbitmq-init
+    build:
+      context: . # Build from the root of the project
+      dockerfile: ./stripeservice/Dockerfile # Specify the path to the Dockerfile in the error directory
+    env_file:
+      - .env # Reference the .env file in the root of the project
+    ports:
+      - "8086:8086" # Map the port from the container to the host
+    networks:
+      - parker-net # Connect the error service to the parker-net network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+  testlock:
+    depends_on:
+      - rabbitmq
+      - rabbitmq-init
+    build:
+      context: . # Build from the root of the project
+      dockerfile: ./testlock/Dockerfile # Specify the path to the Dockerfile in the error directory
+    env_file:
+      - .env # Reference the .env file in the root of the project
+    ports:
+      - "8077:8077" # Map the port from the container to the host
+    networks:
+      - parker-net # Connect the error service to the parker-net network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+  enter_park:
+    depends_on:
+      - rabbitmq
+      - rabbitmq-init
+    build:
+      context: . # Build from the root of the project
+      dockerfile: ./enter_park/Dockerfile # Specify the path to the Dockerfile in the error directory
+    env_file:
+      - .env # Reference the .env file in the root of the project
+    ports:
+      - "8085:8085" # Map the port from the container to the host
+    networks:
+      - parker-net # Connect the error service to the parker-net network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory

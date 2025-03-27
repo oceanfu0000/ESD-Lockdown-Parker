@@ -5,13 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guest Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
+
         body {
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #f8f9fa;
         }
         .form-box {
             text-align: center;
@@ -43,14 +46,16 @@
             font-size: 17px;
             opacity: 0;
             transition: opacity 0.5s, visibility 0.5s;
-        }
-        #toast.show {
+            }
+
+            #toast.show {
             visibility: visible;
             opacity: 1;
-        }
+            }
+        
     </style>
 </head>
-<body class="bg-light">
+<body class="with-navbar imported-font">
     <div id="navbar-placeholder"></div>
     <script>
         fetch("navbar.html")
@@ -60,16 +65,19 @@
             })
             .catch(error => console.error("Error loading the navbar:", error));
     </script>
-    <div id="toast">you failed!</div>
     <div class="form-box">
-        <h2>Guest Door -> Successful/Failed</h2>
+        <div id="toast">empty toast message</div>
+          
+
+        <h2>Guest Door</h2>
         <input type="text" id="otp_value" class="form-control" placeholder="Enter OTP" required>
         <!-- <button class="btn btn-primary">Unlock</button> -->
          <div class="d-flex justify-content-around">
-            <button onclick="checkOTP()">enter (validates OTP, refer to console)</button>
+            <button class="btn" style="background-color:#29C0E6" onclick="checkOTP()">Enter Park!</button>
          </div>
         
     </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
@@ -77,33 +85,33 @@
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <script>
-
     function showToast(message) {
-        const toast = document.getElementById("toast");
-        toast.textContent = message; // Set the message
-        toast.classList.add("show");
+      const toast = document.getElementById("toast");
+      toast.textContent = message; // Set the message
+      toast.classList.add("show");
 
-        // Hide after 3 seconds
-        setTimeout(() => {
-            toast.classList.remove("show");
-        }, 3000);
+      // Hide after 3 seconds
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
     }
-
     async function checkOTP() {
+        const inputValue = document.getElementById("otp_value").value;
+        let sentence = 'http://127.0.0.1:8085/enter_park/guest/' + inputValue;
         try {
-            const inputValue = document.getElementById("otp_value").value;
-            const response = await axios.get ('http://127.0.0.1:8082/guest/validate/' + inputValue);
-            console.log(response);
-            console.log(response.status);
-            showToast("valid OTP! youre in!");
-
-        } catch {
-            showToast("you failed you lousy shit!");
-
-        };
-        
-        
-
-        // i need to put try catch logic here
+            const response = await axios.get (sentence);
+            window.location.href = "guest_entry_successful.html";
+        } catch (error) {
+            // console.error("Caught Axios error:", {
+            //     message: error.message,
+            //     code: error.code,
+            //     status: error.response?.status,
+            //     statusText: error.response?.statusText,
+            //     data: error.response?.data.message,
+            //     fullError: error
+            // });
+            let errorMessage = error.response?.data.message
+            showToast(errorMessage);
+        }
     }
 </script>

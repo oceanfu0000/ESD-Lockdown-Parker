@@ -38,28 +38,33 @@ def send_email(service, sender, to, subject, message_text):
         return {"error": str(error)}, 400
 
 def authenticate():
-  """Shows basic usage of the Gmail API.
-  Lists the user's Gmail labels.
-  """
-  creds = None
-  # The file token.json stores the user's access and refresh tokens, and is
-  # created automatically when the authorization flow completes for the first
-  # time.
-  if os.path.exists("token.json"):
-    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-  # If there are no (valid) credentials available, let the user log in.
-  if not creds or not creds.valid:
-    if creds and creds.expired and creds.refresh_token:
-      creds.refresh(Request())
-    else:
-      flow = InstalledAppFlow.from_client_secrets_file(
-          "credentials.json", SCOPES
-      )
-      creds = flow.run_local_server(port=0)
-    # Save the credentials for the next run
-    with open("token.json", "w") as token:
-      token.write(creds.to_json())
-  return build("gmail", "v1", credentials=creds)
+    """Authenticate and refresh the token automatically if needed."""
+    creds = None
+    # Check if token.json exists and load the stored credentials
+    if os.path.exists("token.json"):
+        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+
+    # If there are no valid credentials, start the OAuth flow
+    if not creds or not creds.valid:
+        # If the token is expired but has a refresh token, refresh it automatically
+        if creds and creds.expired and creds.refresh_token:
+            try:
+                creds.refresh(Request())  # Attempt to refresh the token silently
+            except Exception as e:
+                print(f"Error refreshing token: {e}")
+                creds = None  # Clear the credentials if refreshing failed
+
+        # If still no valid credentials, go through OAuth flow to authenticate the user
+        if not creds or not creds.valid:
+            # Only re-authenticate if token is invalid or refresh failed
+            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            creds = flow.run_local_server(port=0)
+            # Save new credentials for future use
+            with open("token.json", "w") as token:
+                token.write(creds.to_json())
+
+    # Return the authenticated Gmail API service
+    return build("gmail", "v1", credentials=creds)
 
 # TODO: Verify and Remove Comments from Hnin
 @email_blueprint.route("/", methods=["POST"])
@@ -67,6 +72,7 @@ def sending_email():
   try:
     # Call the Gmail API
     # service = build("gmail", "v1", credentials=creds)
+    service = authenticate()
   
     # Send an email 
     # !!!! CHANGE HERE !!!
@@ -81,7 +87,6 @@ def sending_email():
     subject = data.get("subject")
     message_text = data.get("message")
 
-    service = authenticate()
     response = send_email(service, sender_email, recipient_email, subject, message_text)
     return jsonify(response)
 
