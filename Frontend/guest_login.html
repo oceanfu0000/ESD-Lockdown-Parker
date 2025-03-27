@@ -39,6 +39,34 @@
             })
             .catch(error => console.error("Error loading the navbar:", error));
     </script>
+    
+    <!-- DELETE -->
+    <div class="container-fluid bg-primary text-white py-3" id="role-button-container">
+        <div class="row justify-content-center text-center">
+          <!-- Staff Panel -->
+          <div class="col-lg-4 col-md-6 mb-3">
+            <strong>Staff</strong><br>
+            <a class="btn btn-light btn-sm m-1" href="staff_register.html">Staff Register</a>
+            <a class="btn btn-light btn-sm m-1" href="staff_door.html">Staff Door</a>
+            <a class="btn btn-light btn-sm m-1" href="staff_landing.html">Staff Landing</a>
+          </div>
+      
+          <!-- Guest Section -->
+          <div class="col-lg-4 col-md-6 mb-3">
+            <strong>Guest Door → Entry</strong><br>
+            <a class="btn btn-light btn-sm m-1" href="guest_door.html">Guest Door</a>
+            <a class="btn btn-light btn-sm m-1" href="guest_entry_successful.html">Entry Successful</a>
+          </div>
+      
+          <!-- General Actions -->
+          <div class="col-lg-4 col-md-6 mb-3">
+            <strong>Guest Login → Purchase</strong><br>
+            <a class="btn btn-light btn-sm m-1" href="guest_login.html">Guest Login</a>
+            <a class="btn btn-light btn-sm m-1" href="purchase_ticket.html">Purchase Ticket</a>
+          </div>
+        </div>
+    </div>
+
     <div class="form-box with-navbar">
         <h2>Guest Login -> Purchase Ticket</h2>
         <input type="text" class="form-control" placeholder="Email" required>
