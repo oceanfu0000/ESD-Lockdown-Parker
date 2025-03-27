@@ -74,7 +74,7 @@ app.register_blueprint(lock_blueprint, url_prefix="/lock")
 
 if __name__ == '__main__':
     try:
-        app.run(host='0.0.0.0', port=8080)
+        app.run(host='0.0.0.0', port=8079)
     except Exception as e:
         print(f"Flask app encountered an error: {e}")
     finally:

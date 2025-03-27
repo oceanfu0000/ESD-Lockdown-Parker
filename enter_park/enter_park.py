@@ -1,8 +1,6 @@
 from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 
-from datetime import datetime
-
 import requests
 
 import time
@@ -11,6 +9,7 @@ import pika
 import sys
 import os
 import json
+from dotenv import load_dotenv
 # Add the parent directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -22,7 +21,7 @@ exchange_name = "park_topic"
 exchange_type = "topic"
 
 rabbit_client = RabbitMQClient(
-    hostname="localhost",
+    hostname="rabbitmq",
     port=5672,
     exchange_name=exchange_name,
     exchange_type=exchange_type
@@ -37,15 +36,16 @@ CORS(app)
 # Blueprint for Enter Park Routes
 enter_park_blueprint = Blueprint("enter_park", __name__)
 
-error_URL = "http://127.0.0.1:8078/error"
-staff_URL = "http://127.0.0.1:8083/staff"
-guest_URL = "http://127.0.0.1:8082/guest"
-# log_URL = "http://127.0.0.1:8084/accesslogs"
-# Use this when Pi is connected
-# lock_URL = "https://lock.esdlockdownparker.org/"
-# Use this when Pi isn't connected
-lock_URL = "http://127.0.0.1:8079/testlock"
+load_dotenv()
 
+error_URL = os.getenv('ERROR_URL')
+staff_URL = os.getenv('STAFF_URL')
+guest_URL = os.getenv('GUEST_URL')
+log_URL = os.getenv('ACCESS_LOGS_URL')
+lock_URL = os.getenv('TESTLOCK_URL')
+# Use this when Pi is connected
+# lock_URL = os.getenv('LOCK_URL')
+# Use this when Pi isn't connected
 
 @enter_park_blueprint.route("/guest/<int:otp>", methods=["GET"])
 def guest_enter_park(otp):
@@ -82,7 +82,6 @@ def guest_enter_park(otp):
         "redirect_url": f"{guest_URL}/buy_ticket"
     }), 404
 
-# NOTE: WIP
 @enter_park_blueprint.route("/staff", methods=["POST"])
 def staff_enter_park():
     
@@ -104,8 +103,7 @@ def staff_enter_park():
                     "staff_id": r.json()['Staff']['staff_id'],
                     "type": "Success",
                     # Get Staff Name
-                    "message": f"Staff member {r.json()['Staff']['staff_name']} entered the Park!",
-                    "date_time": datetime.now().isoformat()
+                    "message": f"Staff member {r.json()['Staff']['staff_name']} entered the Park!"
                     }
                 rabbit_client.channel.basic_publish(
                     exchange=exchange_name,
@@ -138,8 +136,7 @@ def staff_enter_park():
                 data = {
                     "staff_id": r.json()['Staff']['staff_id'],
                     "type": "Failed",
-                    "message": f"Staff member {r.json()['Staff']['staff_name']} attempted to access the park but failed.",
-                    "date_time": datetime.now().isoformat()
+                    "message": f"Staff member {r.json()['Staff']['staff_name']} attempted to access the park but failed."
                 }
                 rabbit_client.channel.basic_publish(
                     exchange=exchange_name,
@@ -187,15 +184,9 @@ def staff_enter_park():
         return jsonify({"error": "Service unavailable"}), 503
     
 def open_door():
-    # For Testing Purposes
     requests.get(lock_URL + "/open")
     time.sleep(3)
     requests.get(lock_URL + "/close")
-
-    # Actual Demo
-    # requests.get(door_URL + "/open")
-    # time.sleep(3)
-    # requests.get(door_URL + "/close")
 
 # Register the enter_park Blueprint
 app.register_blueprint(enter_park_blueprint, url_prefix="/enter_park")

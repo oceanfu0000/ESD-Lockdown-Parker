@@ -12,7 +12,7 @@ key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
 # RabbitMQ connection settings
-rabbit_host = "localhost"
+rabbit_host = "rabbitmq"
 rabbit_port = 5672
 exchange_name = "park_topic"
 exchange_type = "topic"
@@ -24,8 +24,8 @@ queues = {
 }
 
 # Define API URLs for logging
-log_URL = "http://127.0.0.1:8084/accesslogs"
-error_URL = "http://127.0.0.1:8078/error"
+log_URL = os.getenv('ACCESS_LOGS_URL')
+error_URL = os.getenv('ERROR_URL')
 
 # Callback function to process messages
 def callback(channel, method, properties, body):
