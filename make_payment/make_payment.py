@@ -3,7 +3,9 @@ from flask_cors import CORS
 import pika
 import requests
 import os
-import RabbitMQClient
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from RabbitMQClient import RabbitMQClient
 from invokes import invoke_http
 
 # RabbitMQ Configuration
