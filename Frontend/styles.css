@@ -1,3 +1,11 @@
 .with-navbar {
     padding-top: 100px;
   }
+
+body {
+  background-color: #B3E0EE !important;
+}
+
+.container {
+  background-color: #eff4F5
+}

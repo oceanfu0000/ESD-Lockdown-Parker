@@ -12,7 +12,6 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #f8f9fa;
         }
         .form-box {
             text-align: center;
@@ -53,7 +52,7 @@
         
     </style>
 </head>
-<body class="bg-light with-navbar">
+<body class="with-navbar">
     <div id="navbar-placeholder"></div>
     <script>
         fetch("navbar.html")
@@ -70,7 +69,7 @@
         <input type="text" id="otp_value" class="form-control" placeholder="Enter OTP" required>
         <!-- <button class="btn btn-primary">Unlock</button> -->
          <div class="d-flex justify-content-around">
-            <button onclick="checkOTP()">enter (validates OTP, refer to console)</button>
+            <button class="btn" style="background-color:#29C0E6" onclick="checkOTP()">enter (validates OTP, refer to console)</button>
          </div>
         
     </div>

@@ -1,13 +1,13 @@
 <!-- Fixed Bootstrap Navbar -->
 <nav class="navbar navbar-expand-lg fixed-top">
-    <div class="container-fluid">
+    <div class="container-fluid px-0">
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         
         <div class="collapse navbar-collapse" id="navbarNav">
-            <div class="container text-center rounded-4" id="navbar-container">
+            <div class="px-0 text-center w-100" id="navbar-container">
                 <div class="row">
                     <!-- Staff Panel -->
                     <div class="col-lg-4 col-md-6">
@@ -47,6 +47,14 @@
         padding-top: 80px; /* Adjust based on navbar height */
     }
 
+    .navbar {
+        --bs-navbar-padding-x: 0 !important;
+        --bs-navbar-padding-y: 0 !important;
+        padding: 0 !important; /* Just in case there's other padding */
+        margin: 0 !important;
+        border-radius: 0 !important; /* Removes any curve */
+
+    }
     /* Custom Navbar Styling */
     .navbar-nav {
         width: 100%;
@@ -61,7 +69,11 @@
     }
 
     #navbar-container {
-        background-color: #48CFCB;
+        background-color: #046C95;
+        padding: 0 !important;
+        margin: 0 !important;
+        background-color: #046C95;
+        width: 100%;
     }
 
     @media screen and (max-width: 992px) {
