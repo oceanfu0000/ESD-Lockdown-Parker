@@ -39,7 +39,6 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-    entrypoint: [ "/bin/bash", "-c", "./init-rabbitmq.sh" ]
     volumes:
       - .:/app
     working_dir: /app
