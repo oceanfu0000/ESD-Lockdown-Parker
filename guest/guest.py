@@ -443,26 +443,33 @@ def update_chat_id_by_otp():
         otp = data["otp"]
         chat_id = data["chat_id"]
 
-        # Look up the guest by OTP and update the chat_id
+        # Find guest by OTP
         response = supabase.table("guest").select("*").eq("otp", otp).execute()
 
-        if response.data:
-            # Assuming only one record matches the OTP
-            guest = response.data[0]
-            guest_id = guest["guest_id"]  # Get guest_id from the matched record
-
-            # Update chat_id for the guest with the matched OTP
-            update_response = supabase.table("guest").update({"chat_id": chat_id}).eq("guest_id", guest_id).execute()
-
-            if update_response.data:
-                return jsonify({"message": "Chat ID updated successfully"}), 200
-            else:
-                return jsonify({"error": "Failed to update Chat ID"}), 400
-        else:
+        if not response.data:
             return jsonify({"error": "Guest not found with the provided OTP"}), 404
+
+        guest = response.data[0]
+        guest_id = guest["guest_id"]
+
+        # Step 1: Remove chat_id from any other guest (excluding this one)
+        supabase.table("guest").update({"chat_id": None}) \
+            .eq("chat_id", chat_id) \
+            .neq("guest_id", guest_id) \
+            .execute()
+
+        # Step 2: Update chat_id for the current guest
+        update_response = supabase.table("guest").update({"chat_id": chat_id}) \
+            .eq("guest_id", guest_id).execute()
+
+        if update_response.data:
+            return jsonify({"message": "Chat ID updated successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to update Chat ID"}), 400
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 #get all valid id in park
 @guest_blueprint.route('/valid_chat_ids', methods=['GET'])
