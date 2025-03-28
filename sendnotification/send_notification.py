@@ -23,7 +23,7 @@ exchange_type = "topic"
 queues = {
     "Error": "*.error",
     "Access": "*.access",
-    "Notification": "*.notification"
+    "Notification": "payment.notification"
 }
 
 # API URLs for logging
@@ -84,7 +84,7 @@ def callback(channel, method, properties, body):
         elif routing_key.endswith(".access"):
             url = log_URL
             log_type = "Access"
-        elif routing_key.endswith(".notification"):
+        elif routing_key.endswith("payment.notification"):
             url = email_URL
             log_type = "Notification"
             #get message = guest_id from body, so now send email and send to tele if chat_id is not null
