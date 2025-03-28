@@ -1,5 +1,8 @@
-import os
+#!/usr/bin/env python3
+
+import time
 import pika
+import os
 import json
 import requests
 from supabase import create_client, Client
@@ -11,21 +14,53 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
-# RabbitMQ connection settings
-rabbit_host = "rabbitmq"
-rabbit_port = 5672
+# RabbitMQ connection details
+amqp_host = "rabbitmq"  # This should match your service name in docker-compose
+amqp_port = 5672
 exchange_name = "park_topic"
 exchange_type = "topic"
 
-# Pre-existing queues
 queues = {
     "Error": "*.error",
     "Access": "*.access"
 }
 
-# Define API URLs for logging
+# API URLs for logging
 log_URL = os.getenv('ACCESS_LOGS_URL')
 error_URL = os.getenv('ERROR_URL')
+
+# Connect to RabbitMQ
+def connect_to_rabbitmq():
+    for i in range(5):  # Retry up to 5 times
+        try:
+            print(f"Attempt {i+1}: Connecting to RabbitMQ at {amqp_host}:{amqp_port}...")
+            connection = pika.BlockingConnection(
+                pika.ConnectionParameters(host=amqp_host, port=amqp_port, heartbeat=300, blocked_connection_timeout=300)
+            )
+            print("Connected to RabbitMQ!")
+            return connection
+        except pika.exceptions.AMQPConnectionError:
+            print("RabbitMQ is not ready yet. Retrying in 5 seconds...")
+            time.sleep(5)
+    raise Exception("Failed to connect to RabbitMQ after multiple attempts")
+
+# Declare exchange and queues
+def setup_rabbitmq():
+    connection = connect_to_rabbitmq()
+    channel = connection.channel()
+
+    # Declare Exchange
+    print(f"Declaring exchange: {exchange_name}")
+    channel.exchange_declare(exchange=exchange_name, exchange_type=exchange_type, durable=True)
+
+    # Declare and bind Queues
+    for queue, routing_key in queues.items():
+        print(f"Declaring queue: {queue}")
+        channel.queue_declare(queue=queue, durable=True)
+        channel.queue_bind(exchange=exchange_name, queue=queue, routing_key=routing_key)
+    
+    print("RabbitMQ setup complete!")
+    return channel, connection
 
 # Callback function to process messages
 def callback(channel, method, properties, body):
@@ -58,27 +93,21 @@ def callback(channel, method, properties, body):
 
 # Function to start the RabbitMQ consumer
 def start_rabbitmq_consumer():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbit_host, port=rabbit_port))
-    channel = connection.channel()
-
-    # Declare the exchange (ensure it exists)
-    channel.exchange_declare(exchange=exchange_name, exchange_type=exchange_type, durable=True)
-
-    # Bind the existing queues to the routing keys
-    for queue, routing_key in queues.items():
-        channel.queue_bind(exchange=exchange_name, queue=queue, routing_key=routing_key)
-        print(f"Listening for messages in queue '{queue}' with routing key: {routing_key}")
+    channel, connection = setup_rabbitmq()
 
     # Start consuming messages from both queues
     for queue in queues.keys():
         channel.basic_consume(queue=queue, on_message_callback=callback, auto_ack=True)
+        print(f"Listening for messages in queue '{queue}' with routing key: {queues[queue]}")
 
     print("Waiting for messages...")
-    channel.start_consuming()
-
-# Main execution
-if __name__ == '__main__':
     try:
-        start_rabbitmq_consumer()
-    except Exception as e:
-        print(f"Error: {e}")
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        print("Interrupted, closing connection.")
+    finally:
+        connection.close()
+
+if __name__ == "__main__":
+    setup_rabbitmq()  # Set up RabbitMQ
+    start_rabbitmq_consumer()  # Start consuming messages

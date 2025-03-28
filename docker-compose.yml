@@ -33,21 +33,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  rabbitmq-init:
-    build: .
-    container_name: rabbitmq-init
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    entrypoint: [ "/bin/bash", "-c", "./init-rabbitmq.sh" ]
-    volumes:
-      - .:/app
-    working_dir: /app
-    networks:
-      - parker-net
-    environment:
-      - PYTHONUNBUFFERED=1
-    restart: "no" # Runs only once
   rabbitmq-sendnotification:
     build:
       context: . # Build from the root of the project
@@ -59,13 +44,11 @@ services:
     networks:
       - parker-net # Connect to the same network
     depends_on:
-      - rabbitmq-init
       - rabbitmq # Ensure RabbitMQ is running before starting the sendnotification
     restart: on-failure
   staff:
     depends_on:
       - rabbitmq
-      - rabbitmq-init
     build:
       context: . # Build from the root of the project
       dockerfile: ./staff/Dockerfile # Specify the path to the Dockerfile in the staff directory
@@ -80,7 +63,6 @@ services:
   guest:
     depends_on:
       - rabbitmq
-      - rabbitmq-init
     build:
       context: . # Build from the root of the project
       dockerfile: ./guest/Dockerfile # Specify the path to the Dockerfile in the guest directory
@@ -95,7 +77,6 @@ services:
   accesslogs:
     depends_on:
       - rabbitmq
-      - rabbitmq-init
     build:
       context: . # Build from the root of the project
       dockerfile: ./accesslogs/Dockerfile # Specify the path to the Dockerfile in the accesslogs directory
@@ -110,7 +91,6 @@ services:
   error:
     depends_on:
       - rabbitmq
-      - rabbitmq-init
     build:
       context: . # Build from the root of the project
       dockerfile: ./error/Dockerfile # Specify the path to the Dockerfile in the error directory
@@ -125,7 +105,6 @@ services:
   emailservice:
     depends_on:
       - rabbitmq
-      - rabbitmq-init
     build:
       context: . # Build from the root of the project
       dockerfile: ./emailservice/Dockerfile # Specify the path to the Dockerfile in the error directory
@@ -140,7 +119,6 @@ services:
   stripeservice:
     depends_on:
       - rabbitmq
-      - rabbitmq-init
     build:
       context: . # Build from the root of the project
       dockerfile: ./stripeservice/Dockerfile # Specify the path to the Dockerfile in the error directory
@@ -155,7 +133,6 @@ services:
   testlock:
     depends_on:
       - rabbitmq
-      - rabbitmq-init
     build:
       context: . # Build from the root of the project
       dockerfile: ./testlock/Dockerfile # Specify the path to the Dockerfile in the error directory
@@ -170,7 +147,6 @@ services:
   enter_park:
     depends_on:
       - rabbitmq
-      - rabbitmq-init
     build:
       context: . # Build from the root of the project
       dockerfile: ./enter_park/Dockerfile # Specify the path to the Dockerfile in the error directory
