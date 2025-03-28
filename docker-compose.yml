@@ -48,10 +48,10 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     restart: "no" # Runs only once
-  rabbitmq-consumer:
+  rabbitmq-sendnotification:
     build:
       context: . # Build from the root of the project
-      dockerfile: ./consumer/Dockerfile # Specify the path to your Dockerfile
+      dockerfile: ./sendnotification/Dockerfile # Specify the path to your Dockerfile
     env_file:
       - .env # Reference the .env file for environment variables
     environment:
@@ -60,7 +60,7 @@ services:
       - parker-net # Connect to the same network
     depends_on:
       - rabbitmq-init
-      - rabbitmq # Ensure RabbitMQ is running before starting the consumer
+      - rabbitmq # Ensure RabbitMQ is running before starting the sendnotification
     restart: on-failure
   staff:
     depends_on:
