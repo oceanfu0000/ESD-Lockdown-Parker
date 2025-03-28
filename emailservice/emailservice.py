@@ -66,7 +66,6 @@ def authenticate():
     # Return the authenticated Gmail API service
     return build("gmail", "v1", credentials=creds)
 
-# TODO: Verify and Remove Comments from Hnin
 @email_blueprint.route("/", methods=["POST"])
 def sending_email():
   try:

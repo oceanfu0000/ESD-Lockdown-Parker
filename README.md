@@ -49,7 +49,12 @@ For Windows users, run:
 ```
 http-server ./Frontend -p 8100
 ```
-if error, run "npm install -g http-server" and re-run the above command
+if you run into an error, run the following:
+```
+npm install -g http-server
+http-server ./Frontend -p 8100
+```
+
 ---
 
 ## 📌 **4. Ports Information**
