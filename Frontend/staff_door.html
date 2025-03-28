@@ -35,6 +35,30 @@
         .btn-primary {
             width: 100%;
         }
+
+        
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            font-size: 17px;
+            opacity: 0;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -64,8 +88,7 @@
             const password = document.getElementById("password").value;
 
             if (!staff_name || !password) { 
-                // showToast("Please enter both Name and Password"); //uncomment this once toast is working
-                alert("Please enter both Name and Password"); //comment once toast working
+                showToast("Please enter both Name and Password"); //uncomment this once toast is working
                 return;
             };
 
@@ -77,15 +100,15 @@
             try {
                 console.log("checkpoint 1");
                 const response = await axios.post("http://127.0.0.1:8085/enter_park/staff", loginData);
-                console.log("checkpoint 2");
-                console.log("Login Successful:", response.data); 
-                showToast("Login Successful"); //toast message
+                // console.log("checkpoint 2");
+                // console.log("Login Successful:", response.data); 
+                // showToast("Login Successful"); 
                 window.location.href = "staff_landing.html"; // Redirect to staff landing page on success
             } catch (error) {
                 console.log("checkpoint 3");
-                console.error("Login Failed:", error);
-                // alert("Login Failed. Please check your Name or Password."); //comment out alert once the toast works
-                showToast("Login Failed. Please check your Name or Password."); //uncomment this once toast is working
+                let errorMessage = error.response?.data.message
+                // console.log(errorMessage);
+                showToast(errorMessage);
             }
 
         }
@@ -97,6 +120,7 @@
 
 
     <div class="form-box with-navbar" style="background-color:#B3E0EE">
+        <div id="toast">empty toast message</div>
         <h2>Staff Door</h2>
         <input type="name" id="staff_name" class="form-control" placeholder="Enter Name" required>
         <input type="password" id="password" class="form-control" placeholder="Enter Password" required>

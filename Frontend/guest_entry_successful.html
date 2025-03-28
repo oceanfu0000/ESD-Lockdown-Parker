@@ -11,17 +11,6 @@
 </head>
 
 <body class="container text-center mt-5 with-navbar imported-font">
-    <div id="navbar-placeholder"></div>
-    <script>
-        fetch("navbar.html")
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("navbar-placeholder").innerHTML = data;
-            })
-            .catch(error => console.error("Error loading the navbar:", error));
-    </script>
-    
-
     <div class="container"  style="border-radius:10px">
         <h2 class="text-success">Entry Successful!</h2>
         <p>Enjoy your visit to the theme park.</p>
