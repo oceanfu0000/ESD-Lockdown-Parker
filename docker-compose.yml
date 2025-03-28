@@ -158,7 +158,7 @@ services:
       - parker-net # Connect the error service to the parker-net network
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
-    telegramservice:
+  telegramservice:
       build:
         context: . # Build from the root of the project
         dockerfile: ./telegramservice/Dockerfile # Specify the path to the Dockerfile in the error directory
