@@ -11,7 +11,7 @@ from RabbitMQClient import RabbitMQClient
 from invokes import invoke_http
 
 # RabbitMQ Configuration
-exchange_name = "payment_topic"
+exchange_name = "park_topic"
 exchange_type = "topic"
 
 rabbit_client = RabbitMQClient(

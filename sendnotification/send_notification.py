@@ -22,12 +22,20 @@ exchange_type = "topic"
 
 queues = {
     "Error": "*.error",
-    "Access": "*.access"
+    "Access": "*.access",
+    "Notification": "*.notification"
 }
 
 # API URLs for logging
 log_URL = os.getenv('ACCESS_LOGS_URL')
 error_URL = os.getenv('ERROR_URL')
+email_URL = os.getenv('EMAIL_URL')
+TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TELEGRAM_API_URL = f"https://api.telegram.org/bot{TOKEN}"
+
+def send_message(chat_id, text):
+    url = f"{TELEGRAM_API_URL}/sendMessage"
+    requests.post(url, json={"chat_id": chat_id, "text": text})
 
 # Connect to RabbitMQ
 def connect_to_rabbitmq():
@@ -76,6 +84,24 @@ def callback(channel, method, properties, body):
         elif routing_key.endswith(".access"):
             url = log_URL
             log_type = "Access"
+        elif routing_key.endswith(".notification"):
+            url = email_URL
+            log_type = "Notification"
+            #get message = guest_id from body, so now send email and send to tele if chat_id is not null
+            guest_id = message["guest_id"]
+            # Fetch guest details from Supabase
+            response = supabase.table("guest").select("*").eq("id", guest_id).execute()
+            if response.status_code == 200 and response.data:
+                guest = response.data[0]
+                chat_id = guest.get("chat_id")
+                otp = guest.get("otp")
+                if chat_id:
+                    # Send message to Telegram
+                    send_message(chat_id, f"Guest ID: your OTP is {otp}! Thanks for purchasing a ticket again!")
+                #send email to guest
+                email = guest.get("email")
+                if email:
+                    requests.post(email_URL, json={"to": email, "subject": "Ticket Purchase Confirmation", "message": f"Your OTP is {otp}!"})
         else:
             print(f"Unknown routing key: {routing_key}")
             return
