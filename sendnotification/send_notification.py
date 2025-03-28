@@ -85,9 +85,6 @@ def callback(channel, method, properties, body):
             url = log_URL
             log_type = "Access"
         elif routing_key.endswith("payment.notification"):
-            url = email_URL
-            log_type = "Notification"
-            #get message = guest_id from body, so now send email and send to tele if chat_id is not null
             guest_id = message["guest_id"]
             # Fetch guest details from Supabase
             response = supabase.table("guest").select("*").eq("id", guest_id).execute()
@@ -98,15 +95,20 @@ def callback(channel, method, properties, body):
                 if chat_id:
                     # Send message to Telegram
                     send_message(chat_id, f"Guest ID: your OTP is {otp}! Thanks for purchasing a ticket again!")
-                #send email to guest
+                # Send email to guest
                 email = guest.get("email")
                 if email:
-                    requests.post(email_URL, json={"to": email, "subject": "Ticket Purchase Confirmation", "message": f"Your OTP is {otp}!"})
+                    requests.post(email_URL, json={
+                        "to": email,
+                        "subject": "Ticket Purchase Confirmation",
+                        "message": f"Your OTP is {otp}!"
+                    })
+            return  # Skip logging for payment.notification
         else:
             print(f"Unknown routing key: {routing_key}")
             return
 
-        # Send log to API
+        # Send log to API (only for error and access)
         response = requests.post(url, json=message)
         if response.status_code == 201:
             print(f"{log_type} log added successfully.")
@@ -116,6 +118,7 @@ def callback(channel, method, properties, body):
     except Exception as e:
         print(f"Error processing message: {e}")
         print(f"Message content: {body}")
+
 
 # Function to start the RabbitMQ consumer
 def start_rabbitmq_consumer():
