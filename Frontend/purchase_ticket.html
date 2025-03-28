@@ -39,12 +39,16 @@
             Buy Now <br>
             (linked to make_payments.py)
         </button>
+
+        <button onclick="testbutton()">
+            hehehaha
+        </button>
     </form>
 </body>
 
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 <script>
-
-
     // fermin got this working hehe
     // all credit to fermin 
     const ticket_price = 10000;
@@ -104,6 +108,13 @@
             }
         });
     });
+
+
+    // THIS SHIT DOES NOT WORK
+    async function testbutton() {
+        const response = await axios.post("http://127.0.0.1:8087/makepayment/buyticket");
+        console.log(response);
+    }
 
 </script>
 
