@@ -512,6 +512,7 @@ def get_wallet_by_chat_id(chat_id):
         guest = response.data[0]  # Get the first guest record
 
         # Check if the wallet field exists for the guest
+        print(guest)
         wallet = guest.get("wallet")
         if wallet is not None:
             return jsonify({"wallet": wallet}), 200

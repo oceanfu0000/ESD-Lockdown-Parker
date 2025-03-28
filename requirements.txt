@@ -11,3 +11,6 @@ google_auth_oauthlib
 pytz
 flasgger
 python-telegram-bot
+google-auth
+google-auth-httplib2
+google-cloud-dialogflow

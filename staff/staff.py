@@ -210,17 +210,16 @@ def validate_chat_id(chat_id):
         # Look up the staff member by chat_id
         response = supabase.table("staff").select("*").eq("chat_id", chat_id).execute()
 
-        if response.data:
-            # If the chat_id exists, return a valid response
+        if response.data and len(response.data) > 0:
+            # Valid chat_id found
             return jsonify({"message": "Valid chat_id found"}), 200
         else:
-            # If the chat_id does not exist in the database
+            # No matching chat_id found
             return jsonify({"error": "Chat ID not found"}), 404
 
     except Exception as e:
         log_error("staff", "/validate_chat_id (GET)", str(e))
         return jsonify({"error": str(e)}), 500
-
 
 # Register the staff Blueprint
 app.register_blueprint(staff_blueprint, url_prefix="/staff")
