@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
 
@@ -36,7 +36,7 @@
             width: 100%;
         }
 
-        
+
         #toast {
             visibility: hidden;
             min-width: 250px;
@@ -63,6 +63,8 @@
 </head>
 
 <body class="imported-font">
+
+    <!-- navbar script -->
     <script>
         fetch("navbar.html")
             .then(response => response.text())
@@ -71,26 +73,33 @@
             })
             .catch(error => console.error("Error loading the navbar:", error));
     </script>
-    <script>
-        function showToast(message) { //change your toast here 
-        const toast = document.getElementById("toast");
-        toast.textContent = message; // Set the message
-        toast.classList.add("show");
 
-        // Hide after 3 seconds
-        setTimeout(() => {
-            toast.classList.remove("show");
-        }, 3000);
+    <!-- general  script -->
+    <script>
+
+        // toast script
+        function showToast(message) { //change your toast here 
+            const toast = document.getElementById("toast");
+            toast.textContent = message; // Set the message
+            toast.classList.add("show");
+
+            // Hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3000);
         }
 
+        // checking script
         async function validate() {
             const staff_name = document.getElementById("staff_name").value;
             const password = document.getElementById("password").value;
 
-            if (!staff_name || !password) { 
+            if (!staff_name || !password) {
                 showToast("Please enter both Name and Password"); //uncomment this once toast is working
                 return;
             };
+
+            localStorage.setItem("username", staff_name);
 
             const loginData = { //to send to post request
                 staff_name: staff_name,
@@ -112,6 +121,7 @@
             }
 
         }
+
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
