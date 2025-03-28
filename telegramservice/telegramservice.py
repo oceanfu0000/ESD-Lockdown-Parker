@@ -93,7 +93,7 @@ async def password_received(update: Update, context: CallbackContext):
     teleHandler = update.message.chat.username
     chat_id = update.message.chat_id
     response = invoke_http(
-        f"{guest_URL}/update_chat_id_by_tele_password", method="PUT",
+        f"{staff_URL}/update_chat_id_by_tele_password", method="PUT",
         json={"password": password, "staff_tele": teleHandler, "chat_id": chat_id}
     )
     if response.get("code", 200) == 200:
