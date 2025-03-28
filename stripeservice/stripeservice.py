@@ -16,14 +16,14 @@ CORS(app)
 payment_blueprint = Blueprint("stripeservice", __name__)
 # endregion
 
-@payment_blueprint.route("/charge", methods=["POST"])
+@payment_blueprint.route("/charges", methods=["POST"])
 def charge():
     try:
         data = request.json
-        amount = data.get("amount")
-        currency = data.get("currency")
-        description = data.get("description")
-        source = data.get("source")  # Token generated on frontend (e.g., via Stripe Elements)
+        amount = data["amount"]
+        currency = data["currency"]
+        description = data["description"]
+        source = data["source"]  # Token generated on frontend (e.g., via Stripe Elements)
 
         # Create the charge
         charge = stripe.Charge.create(
@@ -32,8 +32,8 @@ def charge():
             description=description,
             source=source  # The token received from frontend (e.g., 'tok_visa')
         )
-
-        return jsonify(charge), 200  # Return the charge details
+        print("Charge created successfully:", charge)
+        return charge, 200  # Return the charge details
     except stripe.error.StripeError as e:
         return jsonify(error=str(e)), 400
     except Exception as e:

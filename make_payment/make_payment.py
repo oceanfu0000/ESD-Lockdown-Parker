@@ -26,17 +26,17 @@ app = Flask(__name__)
 CORS(app)
 
 # Blueprint for Payment Routes
-payment_blueprint = Blueprint("payment", __name__)
+payment_blueprint = Blueprint("makepayment", __name__)
 
 # Service URLs
-# staff_URL = "http://127.0.0.1:8083/staff"  # Staff service endpoint
-# guest_URL = "http://127.0.0.1:8082/guest"  # Guest service endpoint
-# stripe_URL = "http://127.0.0.1:8086/stripeservice"  # Stripe payment service endpoint
-# error_URL = "http://127.0.0.1:8078/error"  # Error logging endpoint
-staff_URL = os.getenv("STAFF_URL")  # Staff service endpoint
-guest_URL = os.getenv("GUEST_URL")  # Guest service endpoint
-error_URL = os.getenv("ERROR_URL")  # Logging service endpoint
-stripe_URL = os.getenv("STRIPE_URL")  # Stripe payment service endpoint
+staff_URL = "http://127.0.0.1:8083/staff"  # Staff service endpoint
+guest_URL = "http://127.0.0.1:8082/guest"  # Guest service endpoint
+stripe_URL = "http://127.0.0.1:8086/stripeservice"  # Stripe payment service endpoint
+error_URL = "http://127.0.0.1:8078/error"  # Error logging endpoint
+# staff_URL = os.getenv("STAFF_URL")  # Staff service endpoint
+# guest_URL = os.getenv("GUEST_URL")  # Guest service endpoint
+# error_URL = os.getenv("ERROR_URL")  # Logging service endpoint
+# stripe_URL = os.getenv("STRIPE_URL")  # Stripe payment service endpoint
 otp_URL = os.getenv("OTP_URL")  # OTP service endpoint
 
 
@@ -50,6 +50,7 @@ def log_error(service, endpoint, error):
 # Endpoint to handle ticket purchase
 @payment_blueprint.route("/buyticket", methods=["POST"])
 def buyticket():
+    print   ("Received request to buy ticket")
     try:
         # Process payment through Stripe
         response = invoke_http(
