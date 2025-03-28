@@ -109,9 +109,8 @@
             try {
                 console.log("checkpoint 1");
                 const response = await axios.post("http://127.0.0.1:8085/enter_park/staff", loginData);
-                // console.log("checkpoint 2");
-                // console.log("Login Successful:", response.data); 
-                // showToast("Login Successful"); 
+                console.log(response.data.Staff.staff_id);
+                localStorage.setItem("current_staff_id", response.data.Staff.staff_id)
                 window.location.href = "staff_landing.html"; // Redirect to staff landing page on success
             } catch (error) {
                 console.log("checkpoint 3");
