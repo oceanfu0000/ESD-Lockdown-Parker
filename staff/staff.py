@@ -169,6 +169,58 @@ def delete_staff(staff_id):
         log_error("staff",f"/{staff_id} (DELETE)", str(e))
         return jsonify({"error": str(e)}), 500
 
+@staff_blueprint.route("/update_chat_id_by_tele_password", methods=["PUT"])
+def update_staff_chat_id_by_tele_password():
+    try:
+        data = request.json
+
+        # Check for required fields: staff_tele, password, and chat_id
+        if "staff_tele" not in data or "password" not in data or "chat_id" not in data:
+            return jsonify({"error": "Missing required fields: staff_tele, password, or chat_id"}), 400
+
+        staff_tele = data["staff_tele"]
+        password = data["password"]
+        chat_id = data["chat_id"]
+
+        # Look up the staff member by staff_tele and password
+        response = supabase.table("staff").select("*").eq("staff_tele", staff_tele).eq("password", password).execute()
+
+        if response.data:
+            # Assuming only one record matches the staff_tele and password
+            staff = response.data[0]
+            staff_id = staff["staff_id"]  # Get staff_id from the matched record
+
+            # Update chat_id for the staff member with the matched staff_tele and password
+            update_response = supabase.table("staff").update({"chat_id": chat_id}).eq("staff_id", staff_id).execute()
+
+            if update_response.data:
+                return jsonify({"message": "Staff chat_id updated successfully"}), 200
+            else:
+                return jsonify({"error": "Failed to update chat_id"}), 400
+        else:
+            return jsonify({"error": "Staff member not found with the provided staff_tele and password"}), 404
+
+    except Exception as e:
+        log_error("staff", "/update_chat_id_by_tele_password (PUT)", str(e))
+        return jsonify({"error": str(e)}), 500
+
+@staff_blueprint.route("/validate_chat_id/<int:chat_id>", methods=["GET"])
+def validate_chat_id(chat_id):
+    try:
+        # Look up the staff member by chat_id
+        response = supabase.table("staff").select("*").eq("chat_id", chat_id).execute()
+
+        if response.data and len(response.data) > 0:
+            # Valid chat_id found
+            return jsonify({"message": "Valid chat_id found"}), 200
+        else:
+            # No matching chat_id found
+            return jsonify({"error": "Chat ID not found"}), 404
+
+    except Exception as e:
+        log_error("staff", "/validate_chat_id (GET)", str(e))
+        return jsonify({"error": str(e)}), 500
+
 # Register the staff Blueprint
 app.register_blueprint(staff_blueprint, url_prefix="/staff")
 

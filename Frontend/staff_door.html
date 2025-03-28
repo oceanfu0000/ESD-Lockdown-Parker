@@ -35,6 +35,30 @@
         .btn-primary {
             width: 100%;
         }
+
+        
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            font-size: 17px;
+            opacity: 0;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -48,31 +72,45 @@
             .catch(error => console.error("Error loading the navbar:", error));
     </script>
     <script>
-        // import axios from 'axios';
-        function validate() {
+        function showToast(message) { //change your toast here 
+        const toast = document.getElementById("toast");
+        toast.textContent = message; // Set the message
+        toast.classList.add("show");
+
+        // Hide after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000);
+        }
+
+        async function validate() {
             const staff_name = document.getElementById("staff_name").value;
             const password = document.getElementById("password").value;
 
-            if (!staff_name || !password) {
-                alert("Please enter both Name and Password");
+            if (!staff_name || !password) { 
+                showToast("Please enter both Name and Password"); //uncomment this once toast is working
                 return;
             };
 
-            const loginData = {
+            const loginData = { //to send to post request
                 staff_name: staff_name,
                 password: password
             };
 
-            axios.post("http://127.0.0.1:8083/staff/validate", loginData)
-                .then(response => {
-                    // alert("Login Successful!");
-                    console.log("Response:", response.data);
-                    window.location.href = "staff_landing.html";
-                })
-                .catch(error => {
-                    alert("Login Failed. Please check your Name or Password.");
-                    console.error("Error:", error);
-                });
+            try {
+                console.log("checkpoint 1");
+                const response = await axios.post("http://127.0.0.1:8085/enter_park/staff", loginData);
+                // console.log("checkpoint 2");
+                // console.log("Login Successful:", response.data); 
+                // showToast("Login Successful"); 
+                window.location.href = "staff_landing.html"; // Redirect to staff landing page on success
+            } catch (error) {
+                console.log("checkpoint 3");
+                let errorMessage = error.response?.data.message
+                // console.log(errorMessage);
+                showToast(errorMessage);
+            }
+
         }
 
     </script>
@@ -82,6 +120,7 @@
 
 
     <div class="form-box with-navbar" style="background-color:#B3E0EE">
+        <div id="toast">empty toast message</div>
         <h2>Staff Door</h2>
         <input type="name" id="staff_name" class="form-control" placeholder="Enter Name" required>
         <input type="password" id="password" class="form-control" placeholder="Enter Password" required>

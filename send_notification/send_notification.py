@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import json
 import os
-import rabbitmqService.amqp_lib as amqp_lib
 
 rabbit_host = "localhost"
 rabbit_port = 5672

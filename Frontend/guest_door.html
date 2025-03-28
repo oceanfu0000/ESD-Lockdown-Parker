@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guest Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
 
@@ -16,6 +17,7 @@
             justify-content: center;
             height: 100vh;
         }
+
         .form-box {
             text-align: center;
             width: 350px;
@@ -24,12 +26,15 @@
             background: white;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
+
         .form-control {
             margin-bottom: 15px;
         }
+
         .btn-primary {
             width: 100%;
         }
+
         #toast {
             visibility: hidden;
             min-width: 250px;
@@ -46,63 +51,52 @@
             font-size: 17px;
             opacity: 0;
             transition: opacity 0.5s, visibility 0.5s;
-            }
+        }
 
-            #toast.show {
+        #toast.show {
             visibility: visible;
             opacity: 1;
-            }
-        
+        }
     </style>
 </head>
+
 <body class="with-navbar imported-font">
-    <div id="navbar-placeholder"></div>
-    <script>
-        fetch("navbar.html")
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("navbar-placeholder").innerHTML = data;
-            })
-            .catch(error => console.error("Error loading the navbar:", error));
-    </script>
     <div class="form-box">
         <div id="toast">empty toast message</div>
-          
 
-        <h2>Guest Door -> Successful/Failed</h2>
+
+        <h2>Guest Door</h2>
         <input type="text" id="otp_value" class="form-control" placeholder="Enter OTP" required>
         <!-- <button class="btn btn-primary">Unlock</button> -->
-         <div class="d-flex justify-content-around">
-            <button class="btn" style="background-color:#29C0E6" onclick="checkOTP()">enter (validates OTP, refer to console)</button>
-         </div>
-        
+        <div class="d-flex justify-content-around">
+            <button class="btn" style="background-color:#29C0E6" onclick="checkOTP()">Enter Park!</button>
+        </div>
+
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <script>
     function showToast(message) {
-      const toast = document.getElementById("toast");
-      toast.textContent = message; // Set the message
-      toast.classList.add("show");
+        const toast = document.getElementById("toast");
+        toast.textContent = message; // Set the message
+        toast.classList.add("show");
 
-      // Hide after 3 seconds
-      setTimeout(() => {
-        toast.classList.remove("show");
-      }, 3000);
+        // Hide after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000);
     }
     async function checkOTP() {
         const inputValue = document.getElementById("otp_value").value;
-        let statusCode = 0;
+        let sentence = 'http://127.0.0.1:8085/enter_park/guest/' + inputValue;
         try {
-            const response = await axios.get ('http://127.0.0.1:8082/guest/validate/' + inputValue);
-            // console.log(response);
-            statusCode = response.status;
-            console.log(statusCode);
+            const response = await axios.get(sentence);
             window.location.href = "guest_entry_successful.html";
         } catch (error) {
             // console.error("Caught Axios error:", {
@@ -113,10 +107,7 @@
             //     data: error.response?.data.message,
             //     fullError: error
             // });
-            statusCode = error.response?.status;
-            console.log(statusCode);
             let errorMessage = error.response?.data.message
-            console.log(errorMessage);
             showToast(errorMessage);
         }
     }

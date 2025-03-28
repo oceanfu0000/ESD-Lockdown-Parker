@@ -431,6 +431,96 @@ def update_wallet(guest_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@guest_blueprint.route('/update_chat_id_by_otp', methods=['PUT'])
+def update_chat_id_by_otp():
+    try:
+        data = request.json
+        
+        if "otp" not in data or "chat_id" not in data:
+            return jsonify({"error": "Missing required fields: otp or chat_id"}), 400
+        
+        otp = data["otp"]
+        chat_id = data["chat_id"]
+
+        # Look up the guest by OTP and update the chat_id
+        response = supabase.table("guest").select("*").eq("otp", otp).execute()
+
+        if response.data:
+            # Assuming only one record matches the OTP
+            guest = response.data[0]
+            guest_id = guest["guest_id"]  # Get guest_id from the matched record
+
+            # Update chat_id for the guest with the matched OTP
+            update_response = supabase.table("guest").update({"chat_id": chat_id}).eq("guest_id", guest_id).execute()
+
+            if update_response.data:
+                return jsonify({"message": "Chat ID updated successfully"}), 200
+            else:
+                return jsonify({"error": "Failed to update Chat ID"}), 400
+        else:
+            return jsonify({"error": "Guest not found with the provided OTP"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+#get all valid id in park
+@guest_blueprint.route('/valid_chat_ids', methods=['GET'])
+def get_valid_chat_ids():
+    try:
+        # Get current time in Singapore timezone (SGT)
+        sg_tz = pytz.timezone('Asia/Singapore')
+        current_time = datetime.now(sg_tz)
+
+        # Fetch all guests where the OTP is still valid
+        response = supabase.table("guest").select("*").execute()
+        
+        valid_chat_ids = []
+
+        # Check if each guest's OTP is valid
+        for guest in response.data:
+            otp_valid_datetime = guest.get("otp_valid_datetime")
+            if otp_valid_datetime:
+                # Compare OTP's valid datetime with current time
+                if datetime.fromisoformat(otp_valid_datetime) >= current_time:
+                    # Add the chat_id if OTP is still valid
+                    if guest.get("chat_id"):
+                        valid_chat_ids.append(guest["chat_id"])
+
+        if valid_chat_ids:
+            return jsonify({"chat_ids": valid_chat_ids}), 200
+        else:
+            return jsonify({"message": "No valid OTPs with chat_id found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@guest_blueprint.route('/wallet/<int:chat_id>', methods=['GET'])
+def get_wallet_by_chat_id(chat_id):
+    try:
+        
+        if not chat_id:
+            return jsonify({"error": "chat_id is required"}), 400
+
+        # Fetch guest data from Supabase where chat_id matches
+        response = supabase.table("guest").select("*").eq("chat_id", chat_id).execute()
+
+        # If no data is found, return a 404 error
+        if not response.data:
+            return jsonify({"error": "No guest found with the provided chat_id"}), 404
+
+        guest = response.data[0]  # Get the first guest record
+
+        # Check if the wallet field exists for the guest
+        print(guest)
+        wallet = guest.get("wallet")
+        if wallet is not None:
+            return jsonify({"wallet": wallet}), 200
+        else:
+            return jsonify({"error": "Wallet not found for this guest"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Register the guest Blueprint
 app.register_blueprint(guest_blueprint, url_prefix="/guest")
