@@ -38,7 +38,6 @@ enter_park_blueprint = Blueprint("enter_park", __name__)
 
 load_dotenv()
 
-error_URL = os.getenv('ERROR_URL')
 staff_URL = os.getenv('STAFF_URL')
 guest_URL = os.getenv('GUEST_URL')
 lock_URL = os.getenv('TESTLOCK_URL')
