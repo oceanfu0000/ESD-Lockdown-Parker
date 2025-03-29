@@ -1,21 +1,20 @@
-# To Run
+version: "3.8"
+
+# Run:
 # docker-compose up --build -d
 
-# To Close
-# docker compose down
+# Stop:
+# docker-compose down
 
-# Volumes definition
 volumes:
   rabbitmq_data:
     name: parker_rabbitmq_data
 
-# Networks definition
 networks:
   parker-net:
     driver: bridge
     name: parker-net
 
-# Services definition
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -28,141 +27,154 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - parker-net
-    healthcheck:
-      test: [ "CMD", "rabbitmqctl", "status" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+
   rabbitmq-sendnotification:
     build:
-      context: . # Build from the root of the project
-      dockerfile: ./sendnotification/Dockerfile # Specify the path to your Dockerfile
+      context: .
+      dockerfile: ./sendnotification/Dockerfile
     env_file:
-      - .env # Reference the .env file for environment variables
+      - .env
     environment:
-      - PYTHONUNBUFFERED=1 # Ensure output is not buffered
-    networks:
-      - parker-net # Connect to the same network
+      - PYTHONUNBUFFERED=1
     depends_on:
-      - rabbitmq # Ensure RabbitMQ is running before starting the sendnotification
+      - rabbitmq
     restart: on-failure
+    networks:
+      - parker-net
+
   staff:
+    build:
+      context: .
+      dockerfile: ./staff/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8083:8083"
     depends_on:
       - rabbitmq
-    build:
-      context: . # Build from the root of the project
-      dockerfile: ./staff/Dockerfile # Specify the path to the Dockerfile in the staff directory
-    env_file:
-      - .env # Reference the .env file in the root of the project
-    ports:
-      - "8083:8083" # Map the port from the container to the host
     networks:
-      - parker-net # Connect the staff service to the parker-net network
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+      - parker-net
+
   guest:
+    build:
+      context: .
+      dockerfile: ./guest/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8082:8082"
     depends_on:
       - rabbitmq
-    build:
-      context: . # Build from the root of the project
-      dockerfile: ./guest/Dockerfile # Specify the path to the Dockerfile in the guest directory
-    env_file:
-      - .env # Reference the .env file in the root of the project
-    ports:
-      - "8082:8082" # Map the port from the container to the host
     networks:
-      - parker-net # Connect the guest service to the parker-net network
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+      - parker-net
+
   accesslogs:
+    build:
+      context: .
+      dockerfile: ./accesslogs/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8084:8084"
     depends_on:
       - rabbitmq
-    build:
-      context: . # Build from the root of the project
-      dockerfile: ./accesslogs/Dockerfile # Specify the path to the Dockerfile in the accesslogs directory
-    env_file:
-      - .env # Reference the .env file in the root of the project
-    ports:
-      - "8084:8084" # Map the port from the container to the host
     networks:
-      - parker-net # Connect the accesslogs service to the parker-net network
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+      - parker-net
+
   error:
+    build:
+      context: .
+      dockerfile: ./error/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8078:8078"
     depends_on:
       - rabbitmq
-    build:
-      context: . # Build from the root of the project
-      dockerfile: ./error/Dockerfile # Specify the path to the Dockerfile in the error directory
-    env_file:
-      - .env # Reference the .env file in the root of the project
-    ports:
-      - "8078:8078" # Map the port from the container to the host
     networks:
-      - parker-net # Connect the error service to the parker-net network
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+      - parker-net
+
   emailservice:
+    build:
+      context: .
+      dockerfile: ./emailservice/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8088:8088"
     depends_on:
       - rabbitmq
-    build:
-      context: . # Build from the root of the project
-      dockerfile: ./emailservice/Dockerfile # Specify the path to the Dockerfile in the error directory
-    env_file:
-      - .env # Reference the .env file in the root of the project
-    ports:
-      - "8088:8088" # Map the port from the container to the host
     networks:
-      - parker-net # Connect the error service to the parker-net network
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+      - parker-net
+
   stripeservice:
+    build:
+      context: .
+      dockerfile: ./stripeservice/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8086:8086"
     depends_on:
       - rabbitmq
-    build:
-      context: . # Build from the root of the project
-      dockerfile: ./stripeservice/Dockerfile # Specify the path to the Dockerfile in the error directory
-    env_file:
-      - .env # Reference the .env file in the root of the project
-    ports:
-      - "8086:8086" # Map the port from the container to the host
     networks:
-      - parker-net # Connect the error service to the parker-net network
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+      - parker-net
+
   testlock:
+    build:
+      context: .
+      dockerfile: ./testlock/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8077:8077"
     depends_on:
       - rabbitmq
-    build:
-      context: . # Build from the root of the project
-      dockerfile: ./testlock/Dockerfile # Specify the path to the Dockerfile in the error directory
-    env_file:
-      - .env # Reference the .env file in the root of the project
-    ports:
-      - "8077:8077" # Map the port from the container to the host
     networks:
-      - parker-net # Connect the error service to the parker-net network
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
-  enter_park:
+      - parker-net
+
+  enterpark:
+    build:
+      context: .
+      dockerfile: ./enterpark/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8085:8085"
     depends_on:
       - rabbitmq
-    build:
-      context: . # Build from the root of the project
-      dockerfile: ./enter_park/Dockerfile # Specify the path to the Dockerfile in the error directory
-    env_file:
-      - .env # Reference the .env file in the root of the project
-    ports:
-      - "8085:8085" # Map the port from the container to the host
     networks:
-      - parker-net # Connect the error service to the parker-net network
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq # Mount the rabbitmq_data volume to the container's RabbitMQ data directory
+      - parker-net
+
   telegramservice:
-      build:
-        context: . # Build from the root of the project
-        dockerfile: ./telegramservice/Dockerfile # Specify the path to the Dockerfile in the error directory
-      env_file:
-        - .env # Reference the .env file in the root of the project
-      networks:
-        - parker-net # Connect the error service to the parker-net network
+    build:
+      context: .
+      dockerfile: ./telegramservice/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+    networks:
+      - parker-net
+
+  makepayment:
+    build:
+      context: .
+      dockerfile: ./makepayment/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8087:8087"
+    depends_on:
+      - rabbitmq
+    networks:
+      - parker-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    ports:
+      - "8100:8100"
+    networks:
+      - parker-net

@@ -1,1 +1,0 @@
-http-server ./Frontend -p 8100

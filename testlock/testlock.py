@@ -1,31 +1,49 @@
 import logging
-import os
-from flask import Blueprint, Flask
+from flask import Blueprint, Flask, jsonify
 from flask_cors import CORS
-from os import environ
 
-#region Create a Blueprint for testlock routes
+# --------------------------
+# Flask App Setup
+# --------------------------
 app = Flask(__name__)
-
 CORS(app)
 
+# --------------------------
+# Blueprint Setup
+# --------------------------
 testlock_blueprint = Blueprint("testlock", __name__)
 
-#endregion
-
+# --------------------------
+# Routes
+# --------------------------
 @testlock_blueprint.route("/open", methods=["GET"])
 def open_lock():
-    print("Lock Opened")
-    return "open"
+    try:
+        print("🔓 Lock Opened")
+        return jsonify({"message": "Lock opened"}), 200
+    except Exception as e:
+        logging.exception("Error opening lock")
+        return jsonify({"error": str(e)}), 500
 
 @testlock_blueprint.route("/close", methods=["GET"])
 def close_lock():
-    print("Lock Closed")
-    return "close"
+    try:
+        print("🔒 Lock Closed")
+        return jsonify({"message": "Lock closed"}), 200
+    except Exception as e:
+        logging.exception("Error closing lock")
+        return jsonify({"error": str(e)}), 500
 
+# --------------------------
+# Register Blueprint
+# --------------------------
 app.register_blueprint(testlock_blueprint, url_prefix="/testlock")
 
-#region Setting up Flask app
+# --------------------------
+# Run the App
+# --------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8077, debug=True)
-#endregion
+    try:
+        app.run(host="0.0.0.0", port=8077, debug=True)
+    except Exception as e:
+        logging.exception("Flask app failed to start")

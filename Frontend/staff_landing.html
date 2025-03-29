@@ -2,210 +2,185 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Home</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Staff Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css" />
 
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
+    body {
+      padding-top: 100px;
+      font-family: 'Comfortaa', cursive;
+      background-color: #f0f9fb;
+    }
 
-        body {
-            padding-top: 100px;
-        }
+    .container {
+      max-width: 1000px;
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 50px;
+      background-color: #E6E6E6;
+      border-radius: 10px;
+    }
 
-        .container {
-            max-width: 1000px;
-            padding: 30px;
+    .table-responsive {
+      margin-bottom: 1.5rem;
+    }
 
-            text-align: center;
-            margin-bottom: 50px;
-        }
+    .success-row {
+      background-color: #d4edda;
+    }
 
-        .section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            margin: 10px;
-        }
+    .failed-row {
+      background-color: #f8d7da;
+    }
 
-        .log-section {
-            text-align: left;
-            width: 100%;
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            background: #f8f9fa;
-        }
+    .divider {
+      height: 2px;
+      background-color: #ddd;
+      margin: 20px 0;
+    }
 
-        .divider {
-            height: 2px;
-            background-color: #ddd;
-            width: 100%;
-            margin: 20px 0;
-        }
-
-        .success-row {
-            background-color: #d4edda;
-        }
-
-        .failed-row {
-            background-color: #f8d7da;
-        }
-    </style>
-
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-    <script>
-        const current_staff_id = localStorage.getItem("current_staff_id");
-
-    </script>
+    button.btn {
+      margin-bottom: 30px;
+    }
+  </style>
 </head>
 
-<body class="mt-5 with-navbar imported font">
-    <div id="navbar-placeholder"></div>
-    <script>
-        fetch("navbar.html")
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("navbar-placeholder").innerHTML = data;
-            })
-            .catch(error => console.error("Error loading the navbar:", error));
-    </script>
+<body class="with-navbar imported-font">
+  <div id="navbar-placeholder"></div>
 
+  <div class="container mt-4">
+    <h2 class="text-center mb-4">Staff Logs</h2>
 
-    <div class="mt-5 container rounded-3" style="background-color:#E6E6E6">
-
-        <h2 class="text-center">Staff Logs</h2>
-
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-                <thead class="table-info">
-                    <tr>
-                        <th>Log ID</th>
-                        <th>Staff ID</th>
-                        <th>Type</th>
-                        <th>Message</th>
-                        <th>Date & Time</th>
-                    </tr>
-                </thead>
-                <tbody id="logTableBody">
-                    <!-- Rows will be injected here -->
-                </tbody>
-            </table>
-        </div>
-
-        <button class="btn d-flex justify-content-start" onclick="checkParkLogs()"
-            style="color:white; background-color:#48B5D6">
-            Refresh Park Logs
-        </button>
-
-        <div class="divider" style="background:white"></div>
-
-
-        <h2 class="text-center">Own Logs</h2>
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-                <thead class="table-info">
-                    <tr>
-                        <th>Log ID</th>
-                        <th>Staff ID</th>
-                        <th>Type</th>
-                        <th>Message</th>
-                        <th>Date & Time</th>
-                    </tr>
-                </thead>
-                <tbody id="ownTableBody">
-                    <!-- Rows will be injected here -->
-                </tbody>
-            </table>
-        </div>
-
-        <button class="btn d-flex justify-content-start" onclick="checkOwnLogs()"
-            style="color:white; background-color:#48B5D6">
-            Refresh Own Logs
-        </button>
-
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead class="table-info">
+          <tr>
+            <th>Log ID</th>
+            <th>Staff ID</th>
+            <th>Type</th>
+            <th>Message</th>
+            <th>Date & Time</th>
+          </tr>
+        </thead>
+        <tbody id="logTableBody"></tbody>
+      </table>
     </div>
 
-</body>
+    <button class="btn btn-info" onclick="checkParkLogs()">Refresh Park Logs</button>
 
-<script>
+    <div class="divider"></div>
 
-    const tableBody = document.getElementById("logTableBody");
+    <h2 class="text-center mb-4">Own Logs</h2>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead class="table-info">
+          <tr>
+            <th>Log ID</th>
+            <th>Staff ID</th>
+            <th>Type</th>
+            <th>Message</th>
+            <th>Date & Time</th>
+          </tr>
+        </thead>
+        <tbody id="ownTableBody"></tbody>
+      </table>
+    </div>
+
+    <button class="btn btn-info" onclick="checkOwnLogs()">Refresh Own Logs</button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <script>
+    const current_staff_id = localStorage.getItem("current_staff_id");
+
+    fetch("navbar.html")
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("navbar-placeholder").innerHTML = data;
+      })
+      .catch(err => console.error("Navbar load error:", err));
 
     async function checkParkLogs() {
-
-        const requestURL = 'http://127.0.0.1:8084/accesslogs';
-
-        const response = await axios.get(requestURL);
-        // console.log(response);
-
+      try {
+        const response = await axios.get("/accesslogs");
         const logs = response.data;
-        // console.log(logs);
+
         logs.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
         const recentLogs = logs.slice(0, 10);
-        // console.log(recentLogs);
 
-        // clears existing rows
+        const tableBody = document.getElementById("logTableBody");
         tableBody.innerHTML = "";
 
         recentLogs.forEach(log => {
-            const row = document.createElement("tr");
-            row.className = log.type === "Success" ? "success-row" : "failed-row";
-            row.innerHTML = `
+          const row = document.createElement("tr");
+          row.className = log.type === "Success" ? "success-row" : "failed-row";
+          row.innerHTML = `
             <td>${log.log_id}</td>
             <td>${log.staff_id}</td>
             <td>${log.type}</td>
             <td>${log.message}</td>
             <td>${new Date(log.date_time).toLocaleString()}</td>
-            `;
-            tableBody.appendChild(row);
+          `;
+          tableBody.appendChild(row);
         });
+      } catch (error) {
+        console.error("Error fetching park logs:", error);
+      }
     }
 
+    async function checkOwnLogs() {
+      if (!current_staff_id) {
+        alert("No staff ID found in local storage.");
+        return;
+      }
 
-    async function checkOwnLogs(username) {
-        const requestURL = 'http://127.0.0.1:8084/accesslogs/' + current_staff_id;
-        const response = await axios.get(requestURL);
-        // console.log(response.data.accesslogs);
+      try {
+        const response = await axios.get(`/accesslogs/${current_staff_id}`);
+        const logs = response.data.accesslogs;
+
+        logs.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
+        const recentLogs = logs.slice(0, 10);
 
         const ownTableBody = document.getElementById("ownTableBody");
-
-        const ownAccessLogs = response.data.accesslogs;
-
-        // Sort by most recent
-        ownAccessLogs.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
-
-        // Get latest 10
-        const recentAccessLogs = ownAccessLogs.slice(0, 10);
-
-        // Clear previous rows
         ownTableBody.innerHTML = "";
 
-        // Populate rows
-        recentAccessLogs.forEach(log => {
-            const row = document.createElement("tr");
-            row.className = log.type === "Success" ? "success-row" : "failed-row";
-            row.innerHTML = `
-                <td>${log.log_id}</td>
-                <td>${log.staff_id}</td>
-                <td>${log.type}</td>
-                <td>${log.message}</td>
-                <td>${new Date(log.date_time).toLocaleString()}</td>
-            `;
-            ownTableBody.appendChild(row);
+        recentLogs.forEach(log => {
+          const row = document.createElement("tr");
+          row.className = log.type === "Success" ? "success-row" : "failed-row";
+          row.innerHTML = `
+            <td>${log.log_id}</td>
+            <td>${log.staff_id}</td>
+            <td>${log.type}</td>
+            <td>${log.message}</td>
+            <td>${new Date(log.date_time).toLocaleString()}</td>
+          `;
+          ownTableBody.appendChild(row);
         });
+      } catch (error) {
+        console.error("Error fetching own logs:", error);
+      }
     }
-</script>
 
+    // Auto-load logs on page load and check for staff login
+    window.onload = () => {
+    if (!current_staff_id) {
+        window.location.href = "staff_login.html";
+        return;
+    }
+
+    checkParkLogs();
+    checkOwnLogs();
+    };
+
+  </script>
+</body>
 </html>

@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY . /app
 
 # Expose the port the app runs on
-EXPOSE 8085
+EXPOSE 8087
 
 # Run the application
-CMD ["python", "./enter_park/enter_park.py"]
+CMD ["python", "./makepayment/makepayment.py"]

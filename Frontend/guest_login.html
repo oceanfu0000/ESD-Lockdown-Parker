@@ -1,44 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guest Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Guest Registration</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
 
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        .form-box {
-            text-align: center;
-            width: 350px;
-            padding: 30px;
-            border-radius: 10px;
-            background: white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .form-control {
-            margin-bottom: 15px;
-        }
-        .btn-primary {
-            width: 100%;
-        }
-    </style>
+    body {
+      font-family: 'Comfortaa', cursive;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f8f9fa;
+    }
+
+    .form-box {
+      width: 350px;
+      padding: 30px;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-control {
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      width: 100%;
+    }
+
+    #snackbar {
+      visibility: hidden;
+      min-width: 250px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 16px;
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      font-size: 17px;
+      opacity: 0;
+      transition: opacity 0.5s, visibility 0.5s;
+    }
+
+    #snackbar.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    #snackbar.success {
+      background-color: #198754;
+    }
+
+    #snackbar.error {
+      background-color: #dc3545;
+    }
+  </style>
 </head>
-<body class="imported-font">
-    <div class="form-box with-navbar">
-        <h2>Guest Login -> Purchase Ticket</h2>
-        <input type="text" class="form-control" placeholder="Email" required>
-        <input type="text" class="form-control" placeholder="Password" required>
-        <button class="btn btn-primary">Unlock</button>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<body>
+  <div class="form-box">
+    <h4 class="mb-3">🎟️ Guest Registration</h4>
+    <input type="email" id="guest_email" class="form-control" placeholder="Email" required />
+    <input type="text" id="guest_name" class="form-control" placeholder="Name" required />
+    <input type="text" id="guest_tele" class="form-control" placeholder="Phone Number" required />
+    <button class="btn btn-primary" onclick="registerGuest()">Register & Buy Ticket</button>
+  </div>
+
+  <div id="snackbar"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    function showSnackbar(message, type = "success") {
+      const snackbar = document.getElementById("snackbar");
+      snackbar.textContent = message;
+      snackbar.className = `show ${type}`;
+      setTimeout(() => {
+        snackbar.className = snackbar.className.replace(`show ${type}`, '');
+      }, 3000);
+    }
+
+    async function registerGuest() {
+      const email = document.getElementById("guest_email").value.trim();
+      const name = document.getElementById("guest_name").value.trim();
+      const tele = document.getElementById("guest_tele").value.trim();
+
+      if (!email || !name || !tele) {
+        showSnackbar("Please fill in all fields", "error");
+        return;
+      }
+
+      try {
+        const response = await axios.post("/guest", {
+          guest_name: name,
+          guest_email: email,
+          guest_tele: tele
+        });
+
+        if (response.status === 201) {
+          showSnackbar("🎉 Guest registered successfully!", "success");
+        } else {
+          showSnackbar("Something went wrong. Try again.", "error");
+        }
+      } catch (error) {
+        const message = error?.response?.data?.error || "Server error. Please try again.";
+        showSnackbar(message, "error");
+      }
+    }
+  </script>
 </body>
 </html>

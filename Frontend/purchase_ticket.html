@@ -1,128 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket Purchase</title>
-    <script src="https://js.stripe.com/v3/"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    body { padding-top: 100px; background-color: #f8f9fa; }
+    .tab-pane { padding: 30px; }
+    .toast {
+      visibility: hidden;
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      opacity: 0;
+      transition: visibility 0s, opacity 0.5s linear;
+    }
+    .toast.show {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
 </head>
 
-<body class="container mt-5 with-navbar imported-font">
-    <h2 class="text-center">Purchase Ticket</h2>
-    <form id="payment-form">
-        <div id="card-element">
-            <!-- A Stripe Element will be inserted here. -->
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Number of Tickets</label>
-            <input type="number" class="form-control" id="ticket-count" required min="1">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Payment Method</label>
-            <select class="form-control">
-                <option>Credit/Debit Card</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Total Cost</label>
-            <input type="text" class="form-control" id="total-cost" readonly>
-        </div>
-        <button type="submit" id="submit" class="btn btn-warning">
-            Buy Now <br>
-            (linked to make_payments.py)
-        </button>
+<body>
+<div class="container">
+  <ul class="nav nav-tabs" id="paymentTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="purchase-tab" data-bs-toggle="tab" data-bs-target="#purchase" type="button" role="tab">Purchase Ticket</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="topup-tab" data-bs-toggle="tab" data-bs-target="#topup" type="button" role="tab">Top Up Wallet</button>
+    </li>
+  </ul>
 
-        <button onclick="testbutton()">
-            hehehaha
-        </button>
-    </form>
-</body>
+  <div class="tab-content mt-3" id="paymentTabsContent">
+    <!-- Purchase Ticket Tab -->
+    <div class="tab-pane fade show active" id="purchase" role="tabpanel">
+      <form id="ticket-form">
+        <div id="card-element"></div>
+        <input class="form-control my-3" type="text" placeholder="OTP" id="otp-purchase" required>
+        <input class="form-control mb-3" type="number" placeholder="Guest ID" id="guest-id-purchase" required>
+        <select class="form-select mb-3" id="method-purchase">
+          <option value="stripe">Credit/Debit Card</option>
+          <option value="loyalty">Loyalty Points</option>
+          <option value="wallet">Wallet</option>
+        </select>
+        <input class="form-control mb-3" type="number" placeholder="Amount in cents" id="amount-purchase" required>
+        <button type="submit" class="btn btn-success w-100">Buy Ticket</button>
+      </form>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Top-Up Tab -->
+    <div class="tab-pane fade" id="topup" role="tabpanel">
+      <form id="topup-form">
+        <div id="card-element-topup"></div>
+        <input class="form-control my-3" type="number" placeholder="Amount in cents" id="amount-topup" required>
+        <input class="form-control mb-3" type="number" placeholder="Guest ID" id="guest-id-topup" required>
+        <button type="submit" class="btn btn-primary w-100">Top Up Wallet</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast">Toast Message</div>
 
 <script>
-    // fermin got this working hehe
-    // all credit to fermin 
-    const ticket_price = 10000;
-    const ticket_quantity = document.getElementById("ticket-count");
-    ticket_quantity.addEventListener("input", (event) => {
-        const ticket_total_cost = ticket_price * event.target.value;
-        document.getElementById("total-cost").value = ticket_total_cost;
-    })
-
-    document.addEventListener("DOMContentLoaded", function () {
-        var stripe = Stripe("pk_test_51R2qxUJfYtguBcSFQN3y7lCtQnsKcmhXefXmdyHJLb0TIA1TS7VFIvmUD51bEkrInKnJiNYAkJZ4mG4hpzsjijSB00e1FKcQDO");
-        var elements = stripe.elements();
-        var card = elements.create('card');
-        card.mount('#card-element');
-
-        var form = document.getElementById('payment-form');
-        var submitButton = document.getElementById('submit');
-
-        form.addEventListener('submit', async function (event) {
-            event.preventDefault();
-            submitButton.disabled = true; // Prevent multiple submissions
-
-            const { token, error } = await stripe.createToken(card);
-
-            if (error) {
-                alert(error.message);
-                console.error(error);
-                submitButton.disabled = false; // Re-enable button
-            } else {
-                try {
-                    const response = await fetch('http://127.0.0.1:8087/makepayment/buyticket', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            charge: {
-                                amount: ticket_price, // Amount in cents
-                                currency: 'sgd',
-                                description: 'Ticket Purchase',
-                                source: token.id
-                            },
-                            guest_id: "1",
-                        })
-                    });
-                    console.log(response);
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        alert('Payment successful!');
-                        console.log(result);
-                        form.reset();
-                    } else {
-                        alert('Payment failed: ' + result.error);
-                    }
-                } catch (error) {
-                    alert('Payment request failed. Please try again.');
-                    console.error(error);
-                } finally {
-                    submitButton.disabled = false;
-                }
-            }
-        });
-    });
-
-
-    // THIS SHIT DOES NOT WORK
-    async function testbutton() {
-        const response = await axios.post("http://127.0.0.1:8087/makepayment/buyticket");
-        console.log(response);
+    const stripe = Stripe("pk_test_51R2qxUJfYtguBcSFQN3y7lCtQnsKcmhXefXmdyHJLb0TIA1TS7VFIvmUD51bEkrInKnJiNYAkJZ4mG4hpzsjijSB00e1FKcQDO");
+    const elements = stripe.elements();
+    const card = elements.create('card');
+    const cardTopUp = elements.create('card');
+    let guestId = localStorage.getItem("current_guest_id");
+  
+    window.onload = () => {
+      if (!guestId) {
+        window.location.href = "guest_login.html";
+        return;
+      }
+  
+      // Mount Stripe elements
+      card.mount('#card-element');
+      cardTopUp.mount('#card-element-topup');
+  
+      // Auto-fill Guest ID fields (hidden or visible)
+      const guestFields = document.querySelectorAll("input[id^='guest-id']");
+      guestFields.forEach(field => field.value = guestId);
+    };
+  
+    // Toast utility
+    const toast = document.getElementById("toast");
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
     }
+  
+    // Ticket Purchase Handler
+    document.getElementById("ticket-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const otp = document.getElementById("otp-purchase").value.trim();
+      const amount = parseInt(document.getElementById("amount-purchase").value);
+      const method = document.getElementById("method-purchase").value;
+  
+      let endpoint = {
+        stripe: "/makepayment/buyticket",
+        loyalty: "/makepayment/buyticketbyloyalty",
+        wallet: "/makepayment/buyticketbywallet"
+      }[method];
+  
+      let token = null;
+      if (method === "stripe") {
+        const result = await stripe.createToken(card);
+        if (result.error) return showToast(result.error.message);
+        token = result.token.id;
+      }
+  
+      const payload = {
+        charge: {
+          amount,
+          currency: "sgd",
+          description: "Ticket Purchase",
+          source: token || "dummy_source"
+        },
+        otp,
+        guest_id: parseInt(guestId)
+      };
+  
+      if (method !== "stripe") payload.amount = amount;
+  
+      try {
+        const response = await axios.post(endpoint, payload);
+        showToast(response.data.message || "Payment successful");
+        e.target.reset();
+      } catch (err) {
+        const msg = err.response?.data?.error || "Payment failed";
+        showToast(msg);
+      }
+    });
+  
+    // Top-Up Handler
+    document.getElementById("topup-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const amount = parseInt(document.getElementById("amount-topup").value);
+  
+      const result = await stripe.createToken(cardTopUp);
+      if (result.error) return showToast(result.error.message);
+  
+      const payload = {
+        charge: {
+          amount,
+          currency: "sgd",
+          description: "Top-Up",
+          source: result.token.id
+        },
+        guest_id: parseInt(guestId)
+      };
+  
+      try {
+        const response = await axios.post("/makepayment/topupwallet", payload);
+        showToast(response.data.message || "Top-up successful");
+        e.target.reset();
+      } catch (err) {
+        const msg = err.response?.data?.error || "Top-up failed";
+        showToast(msg);
+      }
+    });
+  </script>
+  
+  
+  
 
-</script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
-
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
-</style>

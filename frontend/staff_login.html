@@ -14,12 +14,10 @@
 
     body {
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
       font-family: 'Comfortaa', cursive;
-      background-color: #f0f9fb;
     }
 
     .form-box {
@@ -27,7 +25,7 @@
       width: 350px;
       padding: 30px;
       border-radius: 10px;
-      background: #ffffff;
+      background: white;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
@@ -69,27 +67,20 @@
 
   <div class="form-box with-navbar" style="background-color:#B3E0EE">
     <div id="toast">empty toast message</div>
-    <h2>Staff Door</h2>
-    <input type="text" id="staff_name" class="form-control" placeholder="Enter Name" required />
-    <input type="password" id="password" class="form-control" placeholder="Enter Password" required />
+    <h2>Staff Login</h2>
+    <input type="text" id="staff_name" class="form-control" placeholder="Enter Name" required>
+    <input type="password" id="password" class="form-control" placeholder="Enter Password" required>
     <button class="btn btn-primary" onclick="validate()">Log In</button>
   </div>
 
-  <!-- Bootstrap -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Navbar fetch -->
   <script>
     fetch("navbar.html")
       .then(response => response.text())
       .then(data => {
         document.getElementById("navbar-placeholder").innerHTML = data;
       })
-      .catch(error => console.error("Error loading navbar:", error));
-  </script>
+      .catch(error => console.error("Error loading the navbar:", error));
 
-  <!-- Logic -->
-  <script>
     function showToast(message) {
       const toast = document.getElementById("toast");
       toast.textContent = message;
@@ -98,33 +89,38 @@
     }
 
     async function validate() {
-      const staff_name = document.getElementById("staff_name").value.trim();
-      const password = document.getElementById("password").value.trim();
+      const staff_name = document.getElementById("staff_name").value;
+      const password = document.getElementById("password").value;
 
       if (!staff_name || !password) {
-        showToast("Please enter both name and password.");
+        showToast("Please enter both Name and Password");
         return;
       }
 
+      const loginData = {
+        staff_name,
+        password
+      };
+
       try {
-        const response = await axios.post("/enter_park/staff", {
-          staff_name,
-          password
-        });
+        const response = await axios.post("/staff/validate", loginData);
 
-        if (response.data?.Staff?.staff_id) {
+        if (response.status === 200 && response.data?.Staff) {
+          localStorage.setItem("username", staff_name);
           localStorage.setItem("current_staff_id", response.data.Staff.staff_id);
-          showToast("✅ Login successful! Welcome, " + staff_name);
-        } else {
-          showToast("Login failed: Unexpected response.");
+          window.location.href = "staff_landing.html";
         }
-
       } catch (error) {
-        const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
-        showToast(errorMessage);
+        const message =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Login failed. Please try again.";
+        showToast(message);
       }
     }
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

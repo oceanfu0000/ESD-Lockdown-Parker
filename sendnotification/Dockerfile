@@ -17,4 +17,4 @@ COPY . /app
 EXPOSE 8089
 
 # Run the application
-CMD ["python", "./sendnotification/send_notification.py"]
+CMD ["python", "./sendnotification/sendnotification.py"]

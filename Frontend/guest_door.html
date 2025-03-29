@@ -2,113 +2,109 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guest Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guest Entry</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f8f9fa;
+      font-family: 'Comfortaa', cursive;
+    }
 
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
+    .form-box {
+      text-align: center;
+      width: 350px;
+      padding: 30px;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
 
-        .form-box {
-            text-align: center;
-            width: 350px;
-            padding: 30px;
-            border-radius: 10px;
-            background: white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
+    .form-control {
+      margin-bottom: 15px;
+    }
 
-        .form-control {
-            margin-bottom: 15px;
-        }
+    .btn {
+      width: 100%;
+    }
 
-        .btn-primary {
-            width: 100%;
-        }
+    #snackbar {
+      visibility: hidden;
+      min-width: 250px;
+      margin-left: -125px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 16px;
+      position: fixed;
+      z-index: 9999;
+      left: 50%;
+      bottom: 30px;
+      font-size: 17px;
+      opacity: 0;
+      transition: opacity 0.5s, visibility 0.5s;
+    }
 
-        #toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px;
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            font-size: 17px;
-            opacity: 0;
-            transition: opacity 0.5s, visibility 0.5s;
-        }
+    #snackbar.show {
+      visibility: visible;
+      opacity: 1;
+    }
 
-        #toast.show {
-            visibility: visible;
-            opacity: 1;
-        }
-    </style>
+    #snackbar.success {
+      background-color: #28a745;
+    }
+
+    #snackbar.error {
+      background-color: #dc3545;
+    }
+  </style>
 </head>
 
-<body class="with-navbar imported-font">
-    <div class="form-box">
-        <div id="toast">empty toast message</div>
+<body>
+  <div class="form-box">
+    <h2>Guest Entry</h2>
+    <input type="text" id="otp_value" class="form-control" placeholder="Enter OTP" required />
+    <button class="btn btn-info" onclick="checkOTP()">Enter Park!</button>
+  </div>
 
+  <div id="snackbar"></div>
 
-        <h2>Guest Door</h2>
-        <input type="text" id="otp_value" class="form-control" placeholder="Enter OTP" required>
-        <!-- <button class="btn btn-primary">Unlock</button> -->
-        <div class="d-flex justify-content-around">
-            <button class="btn" style="background-color:#29C0E6" onclick="checkOTP()">Enter Park!</button>
-        </div>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    function showSnackbar(message, type = 'info') {
+      const snackbar = document.getElementById('snackbar');
+      snackbar.className = `show ${type}`;
+      snackbar.textContent = message;
 
-    </div>
+      setTimeout(() => {
+        snackbar.className = snackbar.className.replace(`show ${type}`, '');
+      }, 3000);
+    }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    async function checkOTP() {
+      const otp = document.getElementById("otp_value").value.trim();
+      if (!otp) {
+        showSnackbar("Please enter your OTP.", "error");
+        return;
+      }
+
+      try {
+        const response = await axios.get(`/enter_park/guest/${otp}`);
+        showSnackbar("✅ Access granted! Enjoy your day 🎉", "success");
+      } catch (error) {
+        const message = error?.response?.data?.message || "❌ Invalid OTP or service error.";
+        showSnackbar(message, "error");
+      }
+    }
+  </script>
 </body>
 
 </html>
-
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-<script>
-    function showToast(message) {
-        const toast = document.getElementById("toast");
-        toast.textContent = message; // Set the message
-        toast.classList.add("show");
-
-        // Hide after 3 seconds
-        setTimeout(() => {
-            toast.classList.remove("show");
-        }, 3000);
-    }
-    async function checkOTP() {
-        const inputValue = document.getElementById("otp_value").value;
-        let sentence = 'http://127.0.0.1:8085/enter_park/guest/' + inputValue;
-        try {
-            const response = await axios.get(sentence);
-            window.location.href = "guest_entry_successful.html";
-        } catch (error) {
-            // console.error("Caught Axios error:", {
-            //     message: error.message,
-            //     code: error.code,
-            //     status: error.response?.status,
-            //     statusText: error.response?.statusText,
-            //     data: error.response?.data.message,
-            //     fullError: error
-            // });
-            let errorMessage = error.response?.data.message
-            showToast(errorMessage);
-        }
-    }
-</script>
