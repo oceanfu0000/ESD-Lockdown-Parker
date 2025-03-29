@@ -97,7 +97,8 @@
       }
 
       try {
-        const response = await axios.get(`/enter_park/guest/${otp}`);
+        const BASE_URL = "http://enter_park:8085/enterpark";
+        const response = await axios.get(`${BASE_URL}/guest/${otp}`);
         showSnackbar("✅ Access granted! Enjoy your day 🎉", "success");
       } catch (error) {
         const message = error?.response?.data?.message || "❌ Invalid OTP or service error.";

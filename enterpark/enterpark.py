@@ -45,7 +45,7 @@ def log_error(service, endpoint, error):
 app = Flask(__name__)
 CORS(app)
 Swagger(app)
-enter_park_blueprint = Blueprint("enter_park", __name__)
+enterpark_blueprint = Blueprint("enterpark", __name__)
 load_dotenv()
 
 staff_URL = os.getenv('STAFF_URL')
@@ -61,12 +61,12 @@ def open_door():
         time.sleep(3)
         requests.get(lock_URL + "/close")
     except Exception as e:
-        log_error("enter_park", "/open_door", e)
+        log_error("enterpark", "/open_door", e)
 
 # -----------------------------
 # Guest Entry Route
 # -----------------------------
-@enter_park_blueprint.route("/guest/<int:otp>", methods=["GET"])
+@enterpark_blueprint.route("/guest/<int:otp>", methods=["GET"])
 @swag_from({
     'tags': ['Guest'],
     'parameters': [
@@ -84,7 +84,7 @@ def open_door():
         503: {'description': 'Guest service unavailable'}
     }
 })
-def guest_enter_park(otp):
+def guest_enterpark(otp):
     try:
         response = requests.get(f"{guest_URL}/validate/{otp}")
         if response.status_code == 200:
@@ -96,16 +96,16 @@ def guest_enter_park(otp):
                 "redirect_url": f"{guest_URL}/buy_ticket"
             }), 404
     except requests.exceptions.RequestException as e:
-        log_error("enter_park", f"/guest/{otp} (GET)", e)
+        log_error("enterpark", f"/guest/{otp} (GET)", e)
         return jsonify({"error": "Guest service unavailable. Try again later."}), 503
     except Exception as e:
-        log_error("enter_park", f"/guest/{otp} (GET)", e)
+        log_error("enterpark", f"/guest/{otp} (GET)", e)
         return jsonify({"error": "Unexpected error"}), 500
 
 # -----------------------------
 # Staff Entry Route
 # -----------------------------
-@enter_park_blueprint.route("/staff", methods=["POST"])
+@enterpark_blueprint.route("/staff", methods=["POST"])
 @swag_from({
     'tags': ['Staff'],
     'parameters': [
@@ -132,7 +132,7 @@ def guest_enter_park(otp):
         500: {'description': 'Unexpected error'}
     }
 })
-def staff_enter_park():
+def staff_enterpark():
     if not request.json:
         return jsonify({"error": "Missing request body"}), 400
 
@@ -156,7 +156,7 @@ def staff_enter_park():
                     properties=pika.BasicProperties(delivery_mode=2),
                 )
             except Exception as e:
-                log_error("enter_park", "/staff (POST) - publish success", e)
+                log_error("enterpark", "/staff (POST) - publish success", e)
                 return jsonify({"error": "Staff notification failed"}), 503
 
         elif status == 401:
@@ -176,27 +176,27 @@ def staff_enter_park():
                     properties=pika.BasicProperties(delivery_mode=2),
                 )
             except Exception as e:
-                log_error("enter_park", "/staff (POST) - publish failure", e)
+                log_error("enterpark", "/staff (POST) - publish failure", e)
 
             return jsonify({"error": "Account locked due to failed attempts"}), 403
 
         else:
-            log_error("enter_park", "/staff (POST)", f"Unexpected status code: {status}")
+            log_error("enterpark", "/staff (POST)", f"Unexpected status code: {status}")
             return jsonify({"error": "Unexpected response from staff service"}), status
 
         return jsonify(response_data), status
 
     except requests.exceptions.RequestException as e:
-        log_error("enter_park", "/staff (POST)", e)
+        log_error("enterpark", "/staff (POST)", e)
         return jsonify({"error": "Staff service unavailable"}), 503
     except Exception as e:
-        log_error("enter_park", "/staff (POST)", e)
+        log_error("enterpark", "/staff (POST)", e)
         return jsonify({"error": "Unexpected error"}), 500
 
 # -----------------------------
 # Register Blueprint and Run App
 # -----------------------------
-app.register_blueprint(enter_park_blueprint, url_prefix="/enter_park")
+app.register_blueprint(enterpark_blueprint, url_prefix="/enterpark")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8085, debug=True)

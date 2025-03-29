@@ -101,7 +101,7 @@
 
   <script>
     const current_staff_id = localStorage.getItem("current_staff_id");
-
+    const BASE_URL = "http://accesslogs:8084/accesslogs";
     fetch("navbar.html")
       .then(res => res.text())
       .then(data => {
@@ -111,7 +111,8 @@
 
     async function checkParkLogs() {
       try {
-        const response = await axios.get("/accesslogs");
+        
+        const response = await axios.get(`${BASE_URL}/accesslogs`);
         const logs = response.data;
 
         logs.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
@@ -144,7 +145,7 @@
       }
 
       try {
-        const response = await axios.get(`/accesslogs/${current_staff_id}`);
+        const response = await axios.get(`${BASE_URL}/accesslogs/${current_staff_id}`);
         const logs = response.data.accesslogs;
 
         logs.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));

@@ -103,7 +103,8 @@
       };
 
       try {
-        const response = await axios.post("/staff/validate", loginData);
+        const BASE_URL = "http://staff:8083/staff";
+        const response = await axios.post(`${BASE_URL}/validate`, loginData);
 
         if (response.status === 200 && response.data?.Staff) {
           localStorage.setItem("username", staff_name);

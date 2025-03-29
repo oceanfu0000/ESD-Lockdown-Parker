@@ -1,17 +1,17 @@
-# Use lightweight Node.js base image
+# Use Node.js base image
 FROM node:18-alpine
 
 # Install http-server globally
 RUN npm install -g http-server
 
 # Set working directory
-WORKDIR /app/Frontend
+WORKDIR /app
 
-# Copy the frontend code into container
-COPY ./Frontend .
+# Correct path to frontend code
+COPY ./frontend ./frontend
 
-# Expose the HTTP server port
+# Expose port
 EXPOSE 8100
 
-# Start the frontend using http-server
-CMD ["http-server", ".", "-p", "8100"]
+# Start the server
+CMD ["http-server", "./frontend", "-p", "8100"]

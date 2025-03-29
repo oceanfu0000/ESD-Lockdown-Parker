@@ -98,7 +98,8 @@
       }
 
       try {
-        const response = await axios.post("/guest", {
+        const BASE_URL = "http://guest:8082/guest";
+        const response = await axios.post(`${BASE_URL}`, {
           guest_name: name,
           guest_email: email,
           guest_tele: tele

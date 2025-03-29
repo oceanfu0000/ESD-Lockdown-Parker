@@ -109,11 +109,11 @@
       const otp = document.getElementById("otp-purchase").value.trim();
       const amount = parseInt(document.getElementById("amount-purchase").value);
       const method = document.getElementById("method-purchase").value;
-  
+      const BASE_URL = 'http://makepayment:8087/makepayment';
       let endpoint = {
-        stripe: "/makepayment/buyticket",
-        loyalty: "/makepayment/buyticketbyloyalty",
-        wallet: "/makepayment/buyticketbywallet"
+        stripe: `${BASE_URL}/buyticket`,
+        loyalty: `${BASE_URL}/buyticketbyloyalty`,
+        wallet: `${BASE_URL}/buyticketbywallet`
       }[method];
   
       let token = null;
@@ -165,7 +165,7 @@
       };
   
       try {
-        const response = await axios.post("/makepayment/topupwallet", payload);
+        const response = await axios.post(`${BASE_URL}/topupwallet`, payload);
         showToast(response.data.message || "Top-up successful");
         e.target.reset();
       } catch (err) {

@@ -107,7 +107,8 @@
       }
 
       try {
-        const response = await axios.post("/enter_park/staff", {
+        const BASE_URL = "http://enter_park:8085/enterpark";
+        const response = await axios.post(`${BASE_URL}/staff`, {
           staff_name,
           password
         });
