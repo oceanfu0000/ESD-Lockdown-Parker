@@ -25,7 +25,7 @@ staff_blueprint = Blueprint("staff", __name__)
 # Routes
 # ------------------------------
 
-@staff_blueprint.route("/", methods=["POST"])
+@staff_blueprint.route("", methods=["POST"])
 def create_staff():
     try:
         data = request.json
@@ -46,7 +46,7 @@ def create_staff():
         return jsonify({"error": str(e)}), 500
 
 
-@staff_blueprint.route("/", methods=["GET"])
+@staff_blueprint.route("", methods=["GET"])
 def read_all_staff():
     try:
         response = supabase.table("staff").select("*").execute()

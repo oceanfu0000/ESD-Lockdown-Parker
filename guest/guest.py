@@ -34,7 +34,7 @@ def get_singapore_time():
 # ROUTES
 # -------------------------------
 
-@guest_blueprint.route("/", methods=["POST"])
+@guest_blueprint.route("", methods=["POST"])
 def create_guest():
     try:
         data = request.get_json()
@@ -53,7 +53,7 @@ def create_guest():
         return jsonify({"error": "Internal server error"}), 500
 
 
-@guest_blueprint.route("/", methods=["GET"])
+@guest_blueprint.route("", methods=["GET"])
 def get_all_guests():
     try:
         response = supabase.table("guest").select("*").execute()

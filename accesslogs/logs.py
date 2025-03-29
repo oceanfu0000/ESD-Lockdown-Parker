@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO)
 # Routes
 # ---------------------------
 
-@accesslogs_blueprint.route("/", methods=["POST"])
+@accesslogs_blueprint.route("", methods=["POST"])
 def create_log():
     try:
         data = request.get_json()
@@ -54,7 +54,7 @@ def create_log():
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 
-@accesslogs_blueprint.route("/", methods=["GET"])
+@accesslogs_blueprint.route("", methods=["GET"])
 def read_all_accesslogs():
     try:
         response = supabase.table("accesslogs").select("*").execute()

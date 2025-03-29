@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO)
 # Routes
 # -----------------------------
 
-@error_blueprint.route("/", methods=["POST"])
+@error_blueprint.route("", methods=["POST"])
 def log_error():
     try:
         data = request.get_json()
@@ -56,7 +56,7 @@ def log_error():
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 
-@error_blueprint.route("/", methods=["GET"])
+@error_blueprint.route("", methods=["GET"])
 def get_all_errors():
     try:
         response = supabase.table("errorlogs").select("*").execute()

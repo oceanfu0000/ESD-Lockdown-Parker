@@ -89,7 +89,7 @@ def send_email(service, sender, to, subject, message_text):
 # Route
 # ------------------------------
 
-@email_blueprint.route("/", methods=["POST"])
+@email_blueprint.route("", methods=["POST"])
 def sending_email():
     try:
         data = request.get_json()
