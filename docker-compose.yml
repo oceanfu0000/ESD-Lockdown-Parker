@@ -173,7 +173,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: ./frontend1/Dockerfile
+      dockerfile: ./frontend/Dockerfile
     ports:
       - "8100:8100"
     networks:

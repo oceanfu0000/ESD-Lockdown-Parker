@@ -8,10 +8,10 @@ RUN npm install -g http-server
 WORKDIR /app
 
 # Correct path to frontend code
-COPY ./frontend ./frontend1
+COPY ./frontend ./frontend
 
 # Expose port
 EXPOSE 8100
 
 # Start the server
-CMD ["http-server", "./frontend", "-p", "8100"]
+CMD [ "http-server", "./frontend", "-p", "8100"]
