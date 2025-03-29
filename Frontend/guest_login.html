@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Guest Registration</title>
+  <title>Guest Register / Login</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
 
@@ -18,7 +21,7 @@
     }
 
     .form-box {
-      width: 350px;
+      width: 400px;
       padding: 30px;
       border-radius: 10px;
       background: white;
@@ -65,19 +68,43 @@
     }
   </style>
 </head>
+
 <body>
   <div class="form-box">
-    <h4 class="mb-3">🎟️ Guest Registration</h4>
-    <input type="email" id="guest_email" class="form-control" placeholder="Email" required />
-    <input type="text" id="guest_name" class="form-control" placeholder="Name" required />
-    <input type="text" id="guest_tele" class="form-control" placeholder="Phone Number" required />
-    <button class="btn btn-primary" onclick="registerGuest()">Register & Buy Ticket</button>
+    <ul class="nav nav-tabs mb-3" id="guestTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">Register</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">Login</button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="guestTabContent">
+      <!-- Register Tab -->
+      <div class="tab-pane fade show active" id="register" role="tabpanel">
+        <h5 class="mb-3">🎟️ Guest Registration</h5>
+        <input type="email" id="guest_email" class="form-control" placeholder="Email" required />
+        <input type="text" id="guest_name" class="form-control" placeholder="Name" required />
+        <input type="text" id="guest_tele" class="form-control" placeholder="Phone Number" required />
+        <button class="btn btn-primary" onclick="registerGuest()">Register & Buy Ticket</button>
+      </div>
+
+      <!-- Login Tab -->
+      <div class="tab-pane fade" id="login" role="tabpanel">
+        <h5 class="mb-3">🔐 Guest Login</h5>
+        <input type="email" id="login_email" class="form-control" placeholder="Email" required />
+        <input type="password" id="login_password" class="form-control" placeholder="Password" required />
+        <button class="btn btn-success" onclick="loginGuest()">Unlock</button>
+      </div>
+    </div>
   </div>
 
   <div id="snackbar"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
+    const BASE_URL = "http://localhost:8082/guest"; // Adjust based on frontend hosting
+
     function showSnackbar(message, type = "success") {
       const snackbar = document.getElementById("snackbar");
       snackbar.textContent = message;
@@ -93,28 +120,55 @@
       const tele = document.getElementById("guest_tele").value.trim();
 
       if (!email || !name || !tele) {
-        showSnackbar("Please fill in all fields", "error");
-        return;
+        return showSnackbar("Please fill in all fields", "error");
       }
 
       try {
-        const BASE_URL = "http://guest:8082/guest";
-        const response = await axios.post(`${BASE_URL}`, {
-          guest_name: name,
+        const res = await axios.post(`${BASE_URL}`, {
           guest_email: email,
+          guest_name: name,
           guest_tele: tele
         });
 
-        if (response.status === 201) {
-          showSnackbar("🎉 Guest registered successfully!", "success");
+        if (res.status === 201) {
+          showSnackbar("🎉 Guest registered successfully!");
         } else {
-          showSnackbar("Something went wrong. Try again.", "error");
+          showSnackbar("Unexpected error", "error");
         }
       } catch (error) {
-        const message = error?.response?.data?.error || "Server error. Please try again.";
-        showSnackbar(message, "error");
+        const msg = error?.response?.data?.error || "Registration failed.";
+        showSnackbar(msg, "error");
+      }
+    }
+
+    async function loginGuest() {
+      const email = document.getElementById("login_email").value.trim();
+      const password = document.getElementById("login_password").value.trim();
+
+      if (!email || !password) {
+        return showSnackbar("Please enter email and password", "error");
+      }
+
+      try {
+        const res = await axios.post(`${BASE_URL}/login`, {
+          guest_email: email,
+          password: password
+        });
+
+        if (res.status === 200) {
+          localStorage.setItem("guest_id", res.data.guest_id); // save for later usage
+          showSnackbar("✅ Login successful!");
+          setTimeout(() => window.location.href = "payment_portal.html", 1200);
+        } else {
+          showSnackbar("Invalid credentials", "error");
+        }
+      } catch (error) {
+        const msg = error?.response?.data?.error || "Login failed.";
+        showSnackbar(msg, "error");
       }
     }
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

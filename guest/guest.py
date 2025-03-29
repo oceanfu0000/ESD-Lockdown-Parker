@@ -109,6 +109,39 @@ def update_guest(guest_id):
         logging.exception(f"Failed to update guest {guest_id}")
         return jsonify({"error": "Internal server error"}), 500
 
+@guest_blueprint.route("/login", methods=["POST"])
+def guest_login():
+    try:
+        data = request.get_json()
+        email = data.get("guest_email")
+        password = data.get("password")
+
+        if not email or not password:
+            return jsonify({"error": "Email and password required"}), 400
+
+        # Fetch guest by email
+        response = supabase.table("guest").select("*").eq("guest_email", email).execute()
+
+        if not response.data:
+            return jsonify({"error": "Guest not found"}), 404
+
+        guest = response.data[0]
+
+        # Basic password check (plaintext)
+        if guest.get("password") != password:
+            return jsonify({"error": "Invalid password"}), 401
+
+        # Return success + guest ID
+        return jsonify({
+            "message": "Login successful",
+            "guest_id": guest["guest_id"]
+        }), 200
+
+    except Exception as e:
+        logging.exception("Guest login failed")
+        return jsonify({"error": "Internal server error"}), 500
+
+
 # -------------------------------
 # Register Blueprint & Run
 # -------------------------------
