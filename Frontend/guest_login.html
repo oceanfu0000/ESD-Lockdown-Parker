@@ -86,7 +86,7 @@
         <h5 class="mb-3">🎟️ Guest Registration</h5>
         <input type="email" id="guest_email" class="form-control" placeholder="Email" required />
         <input type="text" id="guest_name" class="form-control" placeholder="Name" required />
-        <input type="text" id="guest_tele" class="form-control" placeholder="Phone Number" required />
+        <input type="text" id="guest_tele" class="form-control" placeholder="Telegram Handle" required />
         <button class="btn btn-primary" onclick="registerGuest()">Register & Buy Ticket</button>
       </div>
 
@@ -103,7 +103,7 @@
   <div id="snackbar"></div>
 
   <script>
-    const BASE_URL = "http://localhost:8082/guest"; // Update this if deployed elsewhere
+    const BASE_URL = "http://guest:8082/guest"; 
 
     function showSnackbar(message, type = "success") {
       const snackbar = document.getElementById("snackbar");
