@@ -41,7 +41,6 @@ load_dotenv()
 error_URL = os.getenv('ERROR_URL')
 staff_URL = os.getenv('STAFF_URL')
 guest_URL = os.getenv('GUEST_URL')
-log_URL = os.getenv('ACCESS_LOGS_URL')
 lock_URL = os.getenv('TESTLOCK_URL')
 # Use this when Pi is connected
 # lock_URL = os.getenv('LOCK_URL')
