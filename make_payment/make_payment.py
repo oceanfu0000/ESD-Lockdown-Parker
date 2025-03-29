@@ -42,8 +42,16 @@ otp_URL = os.getenv("OTP_URL")  # OTP service endpoint
 
 # Function to log errors by sending a request to the error logging service
 def log_error(service, endpoint, error):
-    requests.post(
-        error_URL, json={"service": service, "endpoint": endpoint, "error": str(error)}
+    message = {
+        "service": service,
+        "endpoint": endpoint,
+        "error": str(error)
+    }
+    rabbit_client.channel.basic_publish(
+        exchange=exchange_name,
+        routing_key=f"{service}.error",  # dynamically use service name
+        body=json.dumps(message),
+        properties=pika.BasicProperties(delivery_mode=2),  # persistent delivery
     )
 
 
