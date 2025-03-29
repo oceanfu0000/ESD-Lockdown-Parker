@@ -17,23 +17,24 @@ def invoke_http(url, method='GET', json=None, **kwargs):
 
     try:
         if method.upper() in SUPPORTED_HTTP_METHODS:
-            r = requests.request(method, url, json = json, **kwargs)
+            r = requests.request(method, url, json=json, **kwargs)
         else:
-            raise Exception("HTTP method {} unsupported.".format(method))
+            raise Exception(f"HTTP method {method} unsupported.")
     except Exception as e:
-        code = 500
-        result = {"code": code, "message": "invocation of service fails: " + url + ". " + str(e)}
-    if code not in range(200,300):
-        return result
+        return {"code": 500, "message": f"Invocation of service fails: {url}. {str(e)}"}
 
-    ## Check http call result
-    if r.status_code != requests.codes.ok:
-        code = r.status_code
+    # Handle non-2xx responses
+    if r.status_code not in range(200, 300):
+        try:
+            return r.json()
+        except Exception:
+            return {"code": r.status_code, "message": f"HTTP error {r.status_code} from {url}"}
+
+    # Handle normal response
     try:
-        result = r.json() if len(r.content)>0 else ""
+        result = r.json() if len(r.content) > 0 else ""
     except Exception as e:
-        code = 500
-        result = {"code": code, "message": "Invalid JSON output from service: " + url + ". " + str(e)}
+        return {"code": 500, "message": f"Invalid JSON output from service: {url}. {str(e)}"}
 
     return result
 
