@@ -8,7 +8,7 @@ RUN npm install -g http-server
 WORKDIR /app
 
 # Correct path to frontend code
-COPY ./frontend ./frontend
+COPY ./frontend ./frontend1
 
 # Expose port
 EXPOSE 8100
