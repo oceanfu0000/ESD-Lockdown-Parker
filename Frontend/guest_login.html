@@ -84,7 +84,7 @@
       <!-- Register Tab -->
       <div class="tab-pane fade" id="register" role="tabpanel">
         <h5 class="mb-3">🎟️ Guest Registration</h5>
-        <input type="username" id="guest_username" class="form-control" placeholder="Username" required />
+        <input type="email" id="guest_email" class="form-control" placeholder="Email" required />
         <input type="text" id="guest_name" class="form-control" placeholder="Name" required />
         <input type="text" id="guest_tele" class="form-control" placeholder="Phone Number" required />
         <button class="btn btn-primary" onclick="registerGuest()">Register & Buy Ticket</button>
@@ -93,7 +93,7 @@
       <!-- Login Tab -->
       <div class="tab-pane fade show active" id="login" role="tabpanel">
         <h5 class="mb-3">🔐 Guest Login</h5>
-        <input type="username" id="login_username" class="form-control" placeholder="Username" required />
+        <input type="email" id="login_email" class="form-control" placeholder="Email" required />
         <input type="password" id="login_password" class="form-control" placeholder="Password" required />
         <button class="btn btn-success" onclick="loginGuest()">Unlock</button>
       </div>
@@ -103,7 +103,7 @@
   <div id="snackbar"></div>
 
   <script>
-    const BASE_URL = "http://localhost:8082/guest"; // Change to match your container setup if needed
+    const BASE_URL = "http://localhost:8082/guest"; // Update this if deployed elsewhere
 
     function showSnackbar(message, type = "success") {
       const snackbar = document.getElementById("snackbar");
@@ -115,17 +115,17 @@
     }
 
     async function registerGuest() {
-      const username = document.getElementById("guest_username").value.trim();
+      const email = document.getElementById("guest_email").value.trim();
       const name = document.getElementById("guest_name").value.trim();
       const tele = document.getElementById("guest_tele").value.trim();
 
-      if (!username || !name || !tele) {
+      if (!email || !name || !tele) {
         return showSnackbar("Please fill in all fields", "error");
       }
 
       try {
         const res = await axios.post(`${BASE_URL}`, {
-          guest_username: username,
+          guest_email: email,
           guest_name: name,
           guest_tele: tele
         });
@@ -142,21 +142,21 @@
     }
 
     async function loginGuest() {
-      const username = document.getElementById("login_username").value.trim();
+      const email = document.getElementById("login_email").value.trim();
       const password = document.getElementById("login_password").value.trim();
 
-      if (!username || !password) {
-        return showSnackbar("Please enter username and password", "error");
+      if (!email || !password) {
+        return showSnackbar("Please enter email and password", "error");
       }
 
       try {
         const res = await axios.post(`${BASE_URL}/login`, {
-          guest_username: username,
+          guest_email: email,
           password: password
         });
 
         if (res.status === 200) {
-          localStorage.setItem("guest_id", res.data.guest_id); // Save for use in payment, etc
+          localStorage.setItem("guest_id", res.data.guest_id);
           showSnackbar("✅ Login successful!");
           setTimeout(() => window.location.href = "payment_portal.html", 1200);
         } else {
