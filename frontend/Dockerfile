@@ -14,4 +14,4 @@ COPY ./frontend ./frontend
 EXPOSE 8100
 
 # Start the server
-CMD ["http-server", "./frontend", "-p", "8100"]
+CMD [ "http-server", "./frontend", "-p", "8100"]
