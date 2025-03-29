@@ -39,7 +39,7 @@ def validate_fields(data, required_fields):
 # Guest Management Endpoints
 # =========================
 
-@guest_blueprint.route('/', methods=["POST"])
+@guest_blueprint.route('', methods=["POST"])
 def create_guest():
     """
     Create a new guest
@@ -94,7 +94,7 @@ def create_guest():
         return error_response(e)
 
 
-@guest_blueprint.route('/', methods=["GET"])
+@guest_blueprint.route('', methods=["GET"])
 def get_all_guests():
     """
     Retrieve all guests
