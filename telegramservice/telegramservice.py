@@ -33,7 +33,7 @@ application = Application.builder().token(TOKEN).build()
 # staff_URL = "http://127.0.0.1:8083/staff"
 # guest_URL = "http://127.0.0.1:8082/guest"
 
-staff_login = os.getenv("STAFF_URL")
+staff_URL = os.getenv("STAFF_URL")
 guest_URL = os.getenv("GUEST_URL")
 
 # Command Handlers
