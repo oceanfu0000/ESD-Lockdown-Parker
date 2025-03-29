@@ -109,7 +109,7 @@
       const otp = document.getElementById("otp-purchase").value.trim();
       const amount = parseInt(document.getElementById("amount-purchase").value);
       const method = document.getElementById("method-purchase").value;
-      const BASE_URL = 'http://makepayment:8087/makepayment';
+      const BASE_URL = 'http://127.0.0.1:8087/makepayment';
       let endpoint = {
         stripe: `${BASE_URL}/buyticket`,
         loyalty: `${BASE_URL}/buyticketbyloyalty`,
