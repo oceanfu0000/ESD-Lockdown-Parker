@@ -38,7 +38,7 @@ def get_singapore_time():
 def create_guest():
     try:
         data = request.get_json()
-        required_fields = {"guest_name", "guest_email", "guest_tele"}
+        required_fields = {"guest_name", "guest_email", "guest_tele","guest_password",}
 
         if not data or not required_fields.issubset(data):
             return jsonify({"error": "Missing required fields"}), 400
