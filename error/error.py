@@ -77,4 +77,4 @@ def get_all_errors():
 app.register_blueprint(error_blueprint, url_prefix="/error")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8078, debug=True)
+    app.run(host='0.0.0.0', port=8078)

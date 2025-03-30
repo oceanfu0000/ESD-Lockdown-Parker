@@ -199,4 +199,4 @@ def staff_enterpark():
 app.register_blueprint(enterpark_blueprint, url_prefix="/enterpark")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8085, debug=True)
+    app.run(host='0.0.0.0', port=8085)

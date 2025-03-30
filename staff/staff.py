@@ -162,4 +162,4 @@ def validate_chat_id(chat_id):
 app.register_blueprint(staff_blueprint, url_prefix="/staff")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8083, debug=True)
+    app.run(host='0.0.0.0', port=8083)

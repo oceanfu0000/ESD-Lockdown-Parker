@@ -90,4 +90,4 @@ def get_accesslogs_by_staff(staff_id):
 app.register_blueprint(accesslogs_blueprint, url_prefix="/accesslogs")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8084, debug=True)
+    app.run(host='0.0.0.0', port=8084)

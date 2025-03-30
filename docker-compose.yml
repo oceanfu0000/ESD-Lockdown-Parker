@@ -1,5 +1,3 @@
-# version: "3.8"
-
 # Run:
 # docker-compose up --build -d
 

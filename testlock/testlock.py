@@ -44,6 +44,6 @@ app.register_blueprint(testlock_blueprint, url_prefix="/testlock")
 # --------------------------
 if __name__ == "__main__":
     try:
-        app.run(host="0.0.0.0", port=8077, debug=True)
+        app.run(host="0.0.0.0", port=8077)
     except Exception as e:
         logging.exception("Flask app failed to start")
