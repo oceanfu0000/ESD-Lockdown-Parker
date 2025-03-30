@@ -792,4 +792,4 @@ def get_valid_chat_ids():
 app.register_blueprint(guest_blueprint, url_prefix="/guest")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8082, debug=True)
+    app.run(host='0.0.0.0', port=8082)
