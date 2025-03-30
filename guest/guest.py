@@ -34,7 +34,6 @@ def validate_fields(data, required_fields):
     """Helper to check that all required fields exist in the JSON payload."""
     return all(field in data for field in required_fields)
 
-
 # =========================
 # Guest Management Endpoints
 # =========================
@@ -93,7 +92,6 @@ def create_guest():
     except Exception as e:
         return error_response(e)
 
-
 @guest_blueprint.route('', methods=["GET"])
 def get_all_guests():
     """
@@ -116,7 +114,6 @@ def get_all_guests():
         return jsonify({"error": "No guests found"}), 404
     except Exception as e:
         return error_response(e)
-
 
 @guest_blueprint.route('/<int:guest_id>', methods=['GET'])
 def get_guest(guest_id):
@@ -156,7 +153,6 @@ def get_guest(guest_id):
         return jsonify({"guest": guest}), 200
     except Exception as e:
         return error_response(e)
-
 
 @guest_blueprint.route('/<int:guest_id>', methods=['PUT'])
 def update_guest(guest_id):
@@ -247,7 +243,6 @@ def update_guest(guest_id):
     except Exception as e:
         return error_response(e)
 
-
 @guest_blueprint.route("/<int:guest_id>", methods=["DELETE"])
 def delete_guest(guest_id):
     """
@@ -280,6 +275,53 @@ def delete_guest(guest_id):
     except Exception as e:
         return error_response(e)
 
+@guest_blueprint.route("/login", methods=["POST"])
+def login_guest():
+    """
+    Login Guest
+    ---
+    tags:
+      - Guest Management
+    parameters:
+      - in: body
+        name: body
+        description: Guest object containing login credentials
+        required: true
+        schema:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              example: john.doe@example.com
+    responses:
+      200:
+        description: Login successful, credentials verified
+      401:
+        description: Invalid credentials
+      400:
+        description: Missing required fields or bad request format
+      500:
+        description: Internal server error
+    """
+    try:
+        data = request.json
+        if 'email' not in data:
+            return jsonify({"error": "Missing required fields"}), 400
+        
+        email = data['email']
+        
+        response = supabase.table("guest").select("*").eq("guest_email", email).execute()
+
+        if not response.data:
+            return jsonify({"error": "No account found"}), 404
+        
+        return jsonify(response.data[0]), 200
+    
+    except Exception as e:
+        return error_response(e)
 
 # =========================
 # OTP Endpoints
@@ -327,7 +369,6 @@ def validate_otp(otp):
     except Exception as e:
         return error_response(e)
 
-
 @guest_blueprint.route('/isotpunique/<int:otp>', methods=['GET'])
 def is_otp_unique(otp):
     """
@@ -356,7 +397,6 @@ def is_otp_unique(otp):
         return jsonify({"guest": response.data}), 404
     except Exception as e:
         return error_response(e)
-
 
 @guest_blueprint.route('/update_chat_id_by_otp', methods=['PUT'])
 def update_chat_id_by_otp():
@@ -415,7 +455,6 @@ def update_chat_id_by_otp():
         return jsonify({"error": "Failed to update Chat ID"}), 400
     except Exception as e:
         return error_response(e)
-
 
 # =========================
 # Ticket Purchase Endpoints
@@ -494,7 +533,6 @@ def buy_ticket_by_loyalty(id):
     except Exception as e:
         return error_response(e)
 
-
 @guest_blueprint.route('/buyticket/<int:id>', methods=['PUT'])
 def buy_ticket(id):
     """
@@ -566,7 +604,6 @@ def buy_ticket(id):
         return jsonify({"error": "Failed to update guest"}), 500
     except Exception as e:
         return error_response(e)
-
 
 @guest_blueprint.route('/buyticketfromwallet/<int:id>', methods=['PUT'])
 def buy_ticket_from_wallet(id):
@@ -713,7 +750,6 @@ def update_wallet(guest_id):
     except Exception as e:
         return error_response(e)
 
-
 @guest_blueprint.route('/wallet/<int:chat_id>', methods=['GET'])
 def get_wallet_by_chat_id(chat_id):
     """
@@ -753,7 +789,6 @@ def get_wallet_by_chat_id(chat_id):
     except Exception as e:
         return error_response(e)
 
-
 @guest_blueprint.route('/valid_chat_ids', methods=['GET'])
 def get_valid_chat_ids():
     """
@@ -786,7 +821,6 @@ def get_valid_chat_ids():
         return jsonify({"message": "No valid OTPs with chat_id found"}), 404
     except Exception as e:
         return error_response(e)
-
 
 # Register the guest Blueprint with the app
 app.register_blueprint(guest_blueprint, url_prefix="/guest")
