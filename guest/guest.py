@@ -280,6 +280,62 @@ def delete_guest(guest_id):
     except Exception as e:
         return error_response(e)
 
+@app.route('/login', methods=['POST'])
+def login():
+    """
+    Login a guest using email and password.
+    ---
+    tags:
+      - Authentication
+    parameters:
+      - in: body
+        name: body
+        description: Guest login credentials
+        required: true
+        schema:
+          type: object
+          required:
+            - guest_email
+            - password
+          properties:
+            guest_email:
+              type: string
+              example: john.doe@example.com
+            password:
+              type: string
+              example: "password123"
+    responses:
+      200:
+        description: Login successful, returns guest_id.
+      400:
+        description: Missing required fields or invalid credentials.
+      500:
+        description: Internal server error.
+    """
+    try:
+        data = request.get_json()
+        required_fields = ["guest_email", "password"]
+        if not validate_fields(data, required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        guest_email = data["guest_email"]
+        password = data["password"]
+
+        # Query the guest table for a matching guest_email and password.
+        response = supabase.table("guest") \
+            .select("*") \
+            .eq("guest_email", guest_email) \
+            .eq("password", password) \
+            .execute()
+
+        if not response.data:
+            return jsonify({"error": "Invalid credentials"}), 400
+
+        guest = response.data[0]
+        return jsonify({"guest_id": guest.get("guest_id")}), 200
+
+    except Exception as e:
+        return error_response(e)
 
 # =========================
 # OTP Endpoints
