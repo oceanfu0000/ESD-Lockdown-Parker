@@ -12,14 +12,12 @@ Before starting, make sure you have the following installed on your computer:
 - Docker 🐳
 - Visual Studio Code 💻
 
-...and a few more tools to be added soon! (TBC) 
-
 ---
 
 ## 🚀 **2. Set Up**
 
 ### ⚠️ **Important:**
-Make sure you have the `.env` file in your project folder!
+Make sure you have the `.env` **(root)**, `esdlocking.json` **(telegramservice)** , `credentials.json` and `token.json` **(emailservice)** file in your project folder!
 
 ### 🔧 **Step-by-Step Instructions:**
 
@@ -37,14 +35,11 @@ Make sure you have the `.env` file in your project folder!
    If you are having trouble running kong, run this commands
    ```
    docker-compose run --rm kong kong migrations up
-   ```
-   ```
+
    docker-compose run --rm kong kong migrations finish
-   ```
-   ```
+
    docker-compose up kong --build -d
    ```
-   run "localhost:8002" to access
 
 ---
 
@@ -125,12 +120,6 @@ docker compose down
    ```
    docker compose up --build -d
    ```
----
-
-### **❓ Q: If I paint my laptop screen black, will it save battery life?**
-
-🔥 **A:** Absolutely! And if you paint it white again, you’ll have a built-in **dark mode toggle**. 😎
-
 ---
 
 Feel free to reach out if you encounter any other issues! 😊

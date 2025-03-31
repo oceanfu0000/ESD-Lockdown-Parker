@@ -11,6 +11,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from flasgger import Swagger, swag_from
+
 # ------------------------------
 # Configuration
 # ------------------------------
@@ -25,6 +27,7 @@ SENDER_EMAIL = "serviceatpark@gmail.com"  # Change if needed
 # ------------------------------
 
 app = Flask(__name__)
+Swagger(app)
 CORS(app)
 email_blueprint = Blueprint("email", __name__)
 logging.basicConfig(level=logging.INFO)
@@ -90,6 +93,76 @@ def send_email(service, sender, to, subject, message_text):
 # ------------------------------
 
 @email_blueprint.route("", methods=["POST"])
+@swag_from({
+    'tags': ['Email'],
+    'summary': 'Send an email via Gmail API',
+    'description': 'This endpoint allows you to send an email using the Gmail API. Provide recipient, subject, and message text in the request.',
+    'parameters': [
+        {
+            'name': 'to',
+            'in': 'body',
+            'type': 'string',
+            'required': True,
+            'description': 'Recipient email address'
+        },
+        {
+            'name': 'subject',
+            'in': 'body',
+            'type': 'string',
+            'required': True,
+            'description': 'Subject of the email'
+        },
+        {
+            'name': 'message',
+            'in': 'body',
+            'type': 'string',
+            'required': True,
+            'description': 'Text content of the email message'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Email sent successfully',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'message_id': {
+                        'type': 'string',
+                        'description': 'The unique ID of the sent message'
+                    },
+                    'status': {
+                        'type': 'string',
+                        'description': 'The status of the email sending operation'
+                    }
+                }
+            }
+        },
+        400: {
+            'description': 'Missing required fields ("to", "subject", or "message")',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {
+                        'type': 'string',
+                        'example': "Missing 'to', 'subject', or 'message' in request."
+                    }
+                }
+            }
+        },
+        500: {
+            'description': 'Internal server error',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {
+                        'type': 'string',
+                        'example': "Internal server error"
+                    }
+                }
+            }
+        }
+    }
+})
 def sending_email():
     try:
         data = request.get_json()
