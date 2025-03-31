@@ -102,7 +102,7 @@ def buyticket():
                 if validate_otp(otp):
                     break
 
-            invoke_http(f"{guest_URL}/buyticket/{guest_id}", method="PUT", json={"otp": otp})
+            invoke_http(f"{guest_URL}/buyticket/{guest_id}", method="PUT", json={"otp": otp,"amount": charge["amount"]})
 
             rabbit_client.channel.basic_publish(
                 exchange=exchange_name,
