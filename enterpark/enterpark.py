@@ -50,7 +50,7 @@ load_dotenv()
 
 staff_URL = os.getenv('STAFF_URL')
 guest_URL = os.getenv('GUEST_URL')
-lock_URL = os.getenv('TESTLOCK_URL')  # or use LOCK_URL if Pi connected
+lock_URL = os.getenv('LOCK_URL')  # or use LOCK_URL if Pi connected
 
 # -----------------------------
 # Helper: Door Open
