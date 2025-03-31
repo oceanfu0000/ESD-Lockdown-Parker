@@ -34,6 +34,18 @@ Make sure you have the `.env` file in your project folder!
    ```
    > **Note**: Always include `--build` if you're making code changes to rebuild the containers.
 
+   If you are having trouble running kong, run this commands
+   ```
+   docker-compose run --rm kong kong migrations up
+   ```
+   ```
+   docker-compose run --rm kong kong migrations finish
+   ```
+   ```
+   docker-compose up kong --build -d
+   ```
+   run "localhost:8002" to access
+
 ---
 
 ## 🖥️ **3. Running the Frontend**
