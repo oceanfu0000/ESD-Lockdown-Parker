@@ -56,7 +56,7 @@ def log_error(service, endpoint, error):
 
 def validate_otp(otp):
     try:
-        otp_response = invoke_http(f"{otp_URL}/isotpunique/{otp}", method="GET")
+        otp_response = invoke_http(f"{guest_URL}/isotpunique/{otp}", method="GET")
         return otp_response.get("code", 200) == 200
     except Exception:
         return False
@@ -77,10 +77,9 @@ def validate_otp(otp):
             'type': 'object',
             'properties': {
                 'charge': {'type': 'object'},
-                'otp': {'type': 'string'},
                 'guest_id': {'type': 'integer'}
             },
-            'required': ['charge', 'otp', 'guest_id']
+            'required': ['charge', 'guest_id']
         }
     }],
     'responses': {
@@ -93,13 +92,15 @@ def buyticket():
     try:
         data = request.get_json()
         charge = data["charge"]
-        otp = data["otp"]
+        # otp = data["otp"]
         guest_id = data["guest_id"]
-
         response = invoke_http(f"{stripe_URL}/charges", method="POST", json=charge)
         if response.get("code", 200) == 200:
-            if not validate_otp(otp):
-                return jsonify({"error": "OTP is not unique"}), 400
+            otp = None
+            while True:
+                otp = invoke_http(f"{otp_URL}", method="GET")
+                if validate_otp(otp):
+                    break
 
             invoke_http(f"{guest_URL}/buyticket/{guest_id}", method="PUT", json={"otp": otp})
 
@@ -133,11 +134,9 @@ def buyticket():
             'type': 'object',
             'properties': {
                 'charge': {'type': 'object'},
-                'otp': {'type': 'string'},
-                'amount': {'type': 'number'},
                 'guest_id': {'type': 'integer'}
             },
-            'required': ['charge', 'otp', 'amount', 'guest_id']
+            'required': ['charge', 'guest_id']
         }
     }],
     'responses': {
@@ -150,14 +149,17 @@ def buyticketbyloyalty():
     try:
         data = request.get_json()
         charge = data["charge"]
-        otp = data["otp"]
-        points = data["amount"]
+        # otp = data["otp"]
+        points = data["charge"]["amount"]
         guest_id = data["guest_id"]
 
         response = invoke_http(f"{stripe_URL}/charges", method="POST", json=charge)
         if response.get("code", 200) == 200:
-            if not validate_otp(otp):
-                return jsonify({"error": "OTP is not unique"}), 400
+            otp = None
+            while True:
+                otp = invoke_http(f"{otp_URL}", method="GET")
+                if validate_otp(otp):
+                    break
 
             invoke_http(
                 f"{guest_URL}/buyticketbyloyalty/{guest_id}",
@@ -195,11 +197,9 @@ def buyticketbyloyalty():
             'type': 'object',
             'properties': {
                 'charge': {'type': 'object'},
-                'otp': {'type': 'string'},
-                'amount': {'type': 'number'},
                 'guest_id': {'type': 'integer'}
             },
-            'required': ['charge', 'otp', 'amount', 'guest_id']
+            'required': ['charge', 'guest_id']
         }
     }],
     'responses': {
@@ -212,14 +212,17 @@ def buyticketbywallet():
     try:
         data = request.get_json()
         charge = data["charge"]
-        otp = data["otp"]
-        amount = data["amount"]
+        # otp = data["otp"]
+        amount = data["charge"]["amount"]
         guest_id = data["guest_id"]
 
         response = invoke_http(f"{stripe_URL}/charges", method="POST", json=charge)
         if response.get("code", 200) == 200:
-            if not validate_otp(otp):
-                return jsonify({"error": "OTP is not unique"}), 400
+            otp = None
+            while True:
+                otp = invoke_http(f"{otp_URL}", method="GET")
+                if validate_otp(otp):
+                    break
 
             invoke_http(
                 f"{guest_URL}/buyticketfromwallet/{guest_id}",

@@ -138,7 +138,7 @@
       }
       total = amount.value
       const charge = {
-        total,
+        amount: total,
         currency: "sgd",
         description: action === "topup" ? "Top-Up" : "Ticket Purchase",
         source: token || "dummy_source"
@@ -148,7 +148,7 @@
         charge,
         guest_id: parseInt(guestId),
       };
-
+      console.log(payload);
       // Add OTP only for ticket purchase
       // if (action === "purchase") payload.otp = otp;
 
