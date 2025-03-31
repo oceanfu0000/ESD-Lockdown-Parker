@@ -39,7 +39,7 @@ QUEUES = {
 LOG_URL = os.getenv("ACCESS_LOGS_URL")
 ERROR_URL = os.getenv("ERROR_URL")
 EMAIL_URL = os.getenv("EMAIL_URL")
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_TOKEN = os.getenv("TOKEN")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 
 # -------------------------------

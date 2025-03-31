@@ -148,34 +148,34 @@ def buyticket():
 def buyticketbyloyalty():
     try:
         data = request.get_json()
-        charge = data["charge"]
+        # charge = data["charge"]
         # otp = data["otp"]
         points = data["charge"]["amount"]
         guest_id = data["guest_id"]
 
-        response = invoke_http(f"{stripe_URL}/charges", method="POST", json=charge)
-        if response.get("code", 200) == 200:
-            otp = None
-            while True:
-                otp = invoke_http(f"{otp_URL}", method="GET")
-                if validate_otp(otp):
-                    break
+        # response = invoke_http(f"{stripe_URL}/charges", method="POST", json=charge)
+        # if response.get("code", 200) == 200:
+        otp = None
+        while True:
+            otp = invoke_http(f"{otp_URL}", method="GET")
+            if validate_otp(otp):
+                break
 
-            invoke_http(
-                f"{guest_URL}/buyticketbyloyalty/{guest_id}",
-                method="PUT",
-                json={"otp": otp, "points": points}
-            )
+        invoke_http(
+            f"{guest_URL}/buyticketbyloyalty/{guest_id}",
+            method="PUT",
+            json={"otp": otp, "points": points}
+        )
 
-            rabbit_client.channel.basic_publish(
-                exchange=exchange_name,
-                routing_key="payment.notification",
-                body=json.dumps({"guest_id": guest_id}),
-                properties=pika.BasicProperties(delivery_mode=2),
-            )
-            return jsonify({"message": "Payment successful! Ticket purchased."}), 200
+        rabbit_client.channel.basic_publish(
+            exchange=exchange_name,
+            routing_key="payment.notification",
+            body=json.dumps({"guest_id": guest_id}),
+            properties=pika.BasicProperties(delivery_mode=2),
+        )
+        return jsonify({"message": "Payment successful! Ticket purchased."}), 200
 
-        return jsonify({"error": "Stripe payment failed"}), 400
+        # return jsonify({"error": "Stripe payment failed"}), 400
 
     except Exception as e:
         log_error("payment_service", "/buyticketbyloyalty", e)
@@ -212,33 +212,34 @@ def buyticketbywallet():
     try:
         data = request.get_json()
         charge = data["charge"]
+
         # otp = data["otp"]
         amount = data["charge"]["amount"]
         guest_id = data["guest_id"]
 
-        response = invoke_http(f"{stripe_URL}/charges", method="POST", json=charge)
-        if response.get("code", 200) == 200:
-            otp = None
-            while True:
-                otp = invoke_http(f"{otp_URL}", method="GET")
-                if validate_otp(otp):
-                    break
+        # response = invoke_http(f"{stripe_URL}/charges", method="POST", json=charge)
+        # if response.get("code", 200) == 200:
+        otp = None
+        while True:
+            otp = invoke_http(f"{otp_URL}", method="GET")
+            if validate_otp(otp):
+                break
 
-            invoke_http(
-                f"{guest_URL}/buyticketfromwallet/{guest_id}",
-                method="PUT",
-                json={"otp": otp, "amount": amount}
-            )
+        invoke_http(
+            f"{guest_URL}/buyticketfromwallet/{guest_id}",
+            method="PUT",
+            json={"otp": otp, "amount": amount}
+        )
 
-            rabbit_client.channel.basic_publish(
-                exchange=exchange_name,
-                routing_key="payment.notification",
-                body=json.dumps({"guest_id": guest_id}),
-                properties=pika.BasicProperties(delivery_mode=2),
-            )
-            return jsonify({"message": "Payment successful! Ticket purchased."}), 200
+        rabbit_client.channel.basic_publish(
+            exchange=exchange_name,
+            routing_key="payment.notification",
+            body=json.dumps({"guest_id": guest_id}),
+            properties=pika.BasicProperties(delivery_mode=2),
+        )
+        return jsonify({"message": "Payment successful! Ticket purchased."}), 200
 
-        return jsonify({"error": "Stripe payment failed"}), 400
+        # return jsonify({"error": "Stripe payment failed"}), 400
 
     except Exception as e:
         log_error("payment_service", "/buyticketbywallet", e)

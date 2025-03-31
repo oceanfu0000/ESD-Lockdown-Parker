@@ -505,7 +505,7 @@ def buy_ticket_by_loyalty(id):
         if "points" not in data or "otp" not in data:
             return jsonify({"error": "Missing required fields: points or otp"}), 400
 
-        points_to_subtract = data['points']
+        points_to_subtract = float(data['points'])
         new_otp = data['otp']
 
         response = supabase.table("guest").select("guest_id", "loyalty_points", "otp", "otp_valid_datetime").eq("guest_id", id).execute()
@@ -578,7 +578,7 @@ def buy_ticket(id):
         if "amount" not in data or "otp" not in data:
             return jsonify({"error": "Missing required fields: amount or otp"}), 400
 
-        amount = data['amount']
+        amount = float(data['amount'])
         new_otp = data['otp']
         points_to_add = math.ceil(float(amount) * 0.10)
 
@@ -650,7 +650,7 @@ def buy_ticket_from_wallet(id):
         if "amount" not in data or "otp" not in data:
             return jsonify({"error": "Missing required fields: amount or otp"}), 400
 
-        amount = data['amount']
+        amount = float(data['amount'])
         new_otp = data['otp']
         points_to_add = math.ceil(float(amount) * 0.10)
 
@@ -739,10 +739,10 @@ def update_wallet(guest_id):
             return jsonify({"error": "Guest not found"}), 404
 
         current_wallet = response.data[0].get('wallet')
-        if wallet_amount < 0 and current_wallet < abs(wallet_amount):
-            return jsonify({"error": "Insufficient funds"}), 400
+        # if wallet_amount < 0 and current_wallet < abs(wallet_amount):
+        #     return jsonify({"error": "Insufficient funds"}), 400
 
-        new_wallet = current_wallet + wallet_amount
+        new_wallet = current_wallet + int(wallet_amount)
         update_response = supabase.table("guest").update({"wallet": new_wallet}).eq("guest_id", guest_id).execute()
 
         if update_response.data:

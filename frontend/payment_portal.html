@@ -88,7 +88,7 @@
     }
 
 
-    const action = document.getElementById("action-type").value;
+    // const action = document.getElementById("action-type").value;
     const method = document.getElementById("payment-method").value;
     const amount = document.getElementById("amount");
     ticketPriceInCents = 1000; // Example ticket price in cents
@@ -129,7 +129,7 @@
 
     document.getElementById("payment-form").addEventListener("submit", async function (e) {
       e.preventDefault();
-
+      action = actionTypeSelect.value;
       let token = null;
       if (method === "stripe") {
         const result = await stripe.createToken(card);
@@ -166,6 +166,7 @@
       if (!endpoint) return showToast("This payment method is not supported for the selected action.");
 
       try {
+        console.log("Sending payload:", payload);
         const response = await axios.post(endpoint, payload);
         showToast(response.data.message || "Success");
         e.target.reset();
