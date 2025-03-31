@@ -41,11 +41,7 @@ otp_URL = os.getenv("OTP_URL")
 
 
 def log_error(service, endpoint, error):
-    message = {
-        "service": service,
-        "endpoint": endpoint,
-        "error": str(error)
-    }
+    message = {"service": service, "endpoint": endpoint, "error": str(error)}
     rabbit_client.channel.basic_publish(
         exchange=exchange_name,
         routing_key=f"{service}.error",
@@ -66,28 +62,40 @@ def validate_otp(otp):
 # Buy Ticket (Stripe)
 # -----------------------------
 @payment_blueprint.route("/buyticket", methods=["POST"])
-@swag_from({
-    'tags': ['Payment'],
-    'summary': 'Buy ticket using Stripe',
-    'parameters': [{
-        'name': 'body',
-        'in': 'body',
-        'required': True,
-        'schema': {
-            'type': 'object',
-            'properties': {
-                'charge': {'type': 'object'},
-                'guest_id': {'type': 'integer'}
-            },
-            'required': ['charge', 'guest_id']
-        }
-    }],
-    'responses': {
-        200: {'description': 'Ticket purchased successfully'},
-        400: {'description': 'Payment processing failed'},
-        503: {'description': 'Guest service unavailable'}
+@swag_from(
+    {
+        "tags": ["Payment"],
+        "summary": "Buy ticket using Stripe",
+        "parameters": [
+            {
+                "name": "body",
+                "in": "body",
+                "required": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "charge": {
+                            "type": "object",
+                            "properties": {
+                                "amount": {"type": "integer"},
+                                "currency": {"type": "string"},
+                                "source": {"type": "string"},
+                                "description": {"type": "string"},
+                            },
+                        },
+                        "guest_id": {"type": "integer"},
+                    },
+                    "required": ["charge", "guest_id"],
+                },
+            }
+        ],
+        "responses": {
+            200: {"description": "Ticket purchased successfully"},
+            400: {"description": "Payment processing failed"},
+            503: {"description": "Guest service unavailable"},
+        },
     }
-})
+)
 def buyticket():
     try:
         data = request.get_json()
@@ -102,7 +110,11 @@ def buyticket():
                 if validate_otp(otp):
                     break
 
-            invoke_http(f"{guest_URL}/buyticket/{guest_id}", method="PUT", json={"otp": otp,"amount": charge["amount"]})
+            invoke_http(
+                f"{guest_URL}/buyticket/{guest_id}",
+                method="PUT",
+                json={"otp": otp, "amount": charge["amount"]},
+            )
 
             rabbit_client.channel.basic_publish(
                 exchange=exchange_name,
@@ -123,28 +135,40 @@ def buyticket():
 # Buy Ticket (Loyalty)
 # -----------------------------
 @payment_blueprint.route("/buyticketbyloyalty", methods=["POST"])
-@swag_from({
-    'tags': ['Payment'],
-    'summary': 'Buy ticket using loyalty points',
-    'parameters': [{
-        'name': 'body',
-        'in': 'body',
-        'required': True,
-        'schema': {
-            'type': 'object',
-            'properties': {
-                'charge': {'type': 'object'},
-                'guest_id': {'type': 'integer'}
-            },
-            'required': ['charge', 'guest_id']
-        }
-    }],
-    'responses': {
-        200: {'description': 'Ticket purchased successfully'},
-        400: {'description': 'Payment processing failed'},
-        503: {'description': 'Guest service unavailable'}
+@swag_from(
+    {
+        "tags": ["Payment"],
+        "summary": "Buy ticket using loyalty points",
+        "parameters": [
+            {
+                "name": "body",
+                "in": "body",
+                "required": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "charge": {
+                            "type": "object",
+                            "properties": {
+                                "amount": {"type": "integer"},
+                                "currency": {"type": "string"},
+                                "source": {"type": "string"},
+                                "description": {"type": "string"},
+                            },
+                        },
+                        "guest_id": {"type": "integer"},
+                    },
+                    "required": ["charge", "guest_id"],
+                },
+            }
+        ],
+        "responses": {
+            200: {"description": "Ticket purchased successfully"},
+            400: {"description": "Payment processing failed"},
+            503: {"description": "Guest service unavailable"},
+        },
     }
-})
+)
 def buyticketbyloyalty():
     try:
         data = request.get_json()
@@ -164,7 +188,7 @@ def buyticketbyloyalty():
         invoke_http(
             f"{guest_URL}/buyticketbyloyalty/{guest_id}",
             method="PUT",
-            json={"otp": otp, "points": points}
+            json={"otp": otp, "points": points},
         )
 
         rabbit_client.channel.basic_publish(
@@ -186,28 +210,40 @@ def buyticketbyloyalty():
 # Buy Ticket (Wallet)
 # -----------------------------
 @payment_blueprint.route("/buyticketbywallet", methods=["POST"])
-@swag_from({
-    'tags': ['Payment'],
-    'summary': 'Buy ticket using wallet balance',
-    'parameters': [{
-        'name': 'body',
-        'in': 'body',
-        'required': True,
-        'schema': {
-            'type': 'object',
-            'properties': {
-                'charge': {'type': 'object'},
-                'guest_id': {'type': 'integer'}
-            },
-            'required': ['charge', 'guest_id']
-        }
-    }],
-    'responses': {
-        200: {'description': 'Ticket purchased successfully'},
-        400: {'description': 'Payment processing failed'},
-        503: {'description': 'Guest service unavailable'}
+@swag_from(
+    {
+        "tags": ["Payment"],
+        "summary": "Buy ticket using wallet balance",
+        "parameters": [
+            {
+                "name": "body",
+                "in": "body",
+                "required": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "charge": {
+                            "type": "object",
+                            "properties": {
+                                "amount": {"type": "integer"},
+                                "currency": {"type": "string"},
+                                "source": {"type": "string"},
+                                "description": {"type": "string"},
+                            },
+                        },
+                        "guest_id": {"type": "integer"},
+                    },
+                    "required": ["charge", "guest_id"],
+                },
+            }
+        ],
+        "responses": {
+            200: {"description": "Ticket purchased successfully"},
+            400: {"description": "Payment processing failed"},
+            503: {"description": "Guest service unavailable"},
+        },
     }
-})
+)
 def buyticketbywallet():
     try:
         data = request.get_json()
@@ -228,7 +264,7 @@ def buyticketbywallet():
         invoke_http(
             f"{guest_URL}/buyticketfromwallet/{guest_id}",
             method="PUT",
-            json={"otp": otp, "amount": amount}
+            json={"otp": otp, "amount": amount},
         )
 
         rabbit_client.channel.basic_publish(
@@ -250,28 +286,40 @@ def buyticketbywallet():
 # Wallet Top-up
 # -----------------------------
 @payment_blueprint.route("/topupwallet", methods=["POST"])
-@swag_from({
-    'tags': ['Payment'],
-    'summary': 'Top up wallet via Stripe',
-    'parameters': [{
-        'name': 'body',
-        'in': 'body',
-        'required': True,
-        'schema': {
-            'type': 'object',
-            'properties': {
-                'charge': {'type': 'object'},
-                'guest_id': {'type': 'integer'}
-            },
-            'required': ['charge', 'guest_id']
-        }
-    }],
-    'responses': {
-        200: {'description': 'Top-up successful'},
-        400: {'description': 'Payment processing failed'},
-        503: {'description': 'Guest service unavailable'}
+@swag_from(
+    {
+        "tags": ["Payment"],
+        "summary": "Top up wallet via Stripe",
+        "parameters": [
+            {
+                "name": "body",
+                "in": "body",
+                "required": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "charge": {
+                            "type": "object",
+                            "properties": {
+                                "amount": {"type": "integer"},
+                                "currency": {"type": "string"},
+                                "source": {"type": "string"},
+                                "description": {"type": "string"},
+                            },
+                        },
+                        "guest_id": {"type": "integer"},
+                    },
+                    "required": ["charge", "guest_id"],
+                },
+            }
+        ],
+        "responses": {
+            200: {"description": "Top-up successful"},
+            400: {"description": "Payment processing failed"},
+            503: {"description": "Guest service unavailable"},
+        },
     }
-})
+)
 def topupwallet():
     try:
         data = request.get_json()
@@ -284,7 +332,7 @@ def topupwallet():
             invoke_http(
                 f"{guest_URL}/updatewallet/{guest_id}",
                 method="PUT",
-                json={"wallet": amount}
+                json={"wallet": amount},
             )
             return jsonify({"message": "Payment successful! Wallet Top-up."}), 200
 
