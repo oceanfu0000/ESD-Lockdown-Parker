@@ -132,7 +132,7 @@ def callback(channel, method, properties, body):
 
                     for staff in response.data:
                         chat_id = staff.get("chat_id")
-                        send_message(staff_name, f"❌ Access failed for {type}")
+                        send_message(chat_id, f"❌ {staff_name} has made multiple unsuccessful attempts to access Door 1.")
 
                 except Exception as e:
                     print(f"❌ Failed to fetch staff from Supabase: {e}")
