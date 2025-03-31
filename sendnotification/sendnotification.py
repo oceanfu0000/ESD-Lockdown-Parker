@@ -113,6 +113,29 @@ def callback(channel, method, properties, body):
         elif routing_key.endswith(".access"):
             log_url = LOG_URL
             log_type = "Access"
+            type = message.get("type")
+            if type == "Failed":
+                staff_id = message.get("staff_id")
+
+                try:
+                    # staff name
+                    response = supabase.table("staff").select("staff_name").eq("staff_id", staff_id).execute()
+                    staff = response.data[0] if response.data else None
+
+                    if not staff:
+                        print(f"⚠️ Staff not found for ID {staff_id}")
+                        return
+                    staff_name = staff.get("staff_name")
+
+                    response = supabase.table("staff").select("chat_id").execute()
+                    staff = response.data[0] if response.data else None
+
+                    for staff in response.data:
+                        chat_id = staff.get("chat_id")
+                        send_message(staff_name, f"❌ Access failed for {type}")
+
+                except Exception as e:
+                    print(f"❌ Failed to fetch staff from Supabase: {e}")
 
         elif routing_key == "payment.notification":
             guest_id = message.get("guest_id")
