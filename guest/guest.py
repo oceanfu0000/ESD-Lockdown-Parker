@@ -308,12 +308,13 @@ def login_guest():
     """
     try:
         data = request.json
-        if 'email' not in data:
+        if 'guest_email' not in data:
             return jsonify({"error": "Missing required fields"}), 400
         
-        email = data['email']
+        email = data['guest_email']
+        password = data['password']
         
-        response = supabase.table("guest").select("*").eq("guest_email", email).execute()
+        response = supabase.table("guest").select("*").eq("guest_email", email).eq("password", password).execute()
 
         if not response.data:
             return jsonify({"error": "No account found"}), 404
