@@ -308,7 +308,7 @@ def login_guest():
     """
     try:
         data = request.json
-        if 'email' not in data:
+        if 'guest_email' not in data:
             return jsonify({"error": "Missing required fields"}), 400
         
         email = data['guest_email']
