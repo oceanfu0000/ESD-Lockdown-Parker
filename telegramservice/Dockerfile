@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy the contents of the staff folder into the container
 COPY . /app
-# COPY ./telegramservice/esdlocking.json /app/esdlocking.json
+COPY ./telegramservice/esdlocking.json /app/esdlocking.json
 
 # Run the application
 CMD ["python", "./telegramservice/telegramservice.py"]

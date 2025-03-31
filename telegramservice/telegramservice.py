@@ -127,14 +127,13 @@ async def broadcast_msg_received(update: Update, context: CallbackContext):
     try:
         msg = update.message.text.strip()
         chat_id = update.message.chat_id
-
         staff_check = invoke_http(f"{staff_URL}/validate_chat_id/{chat_id}", method="GET")
         if staff_check.get("code", 200) == 200:
             guest_response = invoke_http(f"{guest_URL}/valid_chat_ids", method="GET")
             if guest_response.get("code", 200) == 200:
                 for cid in guest_response["chat_ids"]:
                     try:
-                        bot.send_message(chat_id=cid, text=msg)
+                        await bot.send_message(chat_id=cid, text=msg)
                     except Exception:
                         continue
                 await update.message.reply_text("Broadcast sent.")

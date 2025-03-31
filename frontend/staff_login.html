@@ -106,7 +106,7 @@
         const BASE_URL = "http://127.0.0.1:8083/staff";
         const response = await axios.post(`${BASE_URL}/validate`, loginData);
 
-        if (response.status === 200 && response.data?.Staff) {
+        if (response.status === 200) {
           localStorage.setItem("username", staff_name);
           localStorage.setItem("current_staff_id", response.data.Staff.staff_id);
           window.location.href = "staff_landing.html";

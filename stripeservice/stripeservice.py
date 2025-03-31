@@ -21,6 +21,7 @@ payment_blueprint = Blueprint("stripeservice", __name__)
 def charge():
     try:
         data = request.get_json()
+        # data = requestJson["charge"]
 
         required_fields = {"amount", "currency", "description", "source"}
         if not data or not required_fields.issubset(data):

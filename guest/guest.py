@@ -580,7 +580,7 @@ def buy_ticket(id):
 
         amount = data['amount']
         new_otp = data['otp']
-        points_to_add = math.ceil(amount * 0.10)
+        points_to_add = math.ceil(float(amount) * 0.10)
 
         response = supabase.table("guest").select("guest_id", "loyalty_points", "otp", "otp_valid_datetime").eq("guest_id", id).execute()
         if not response.data:
@@ -652,7 +652,7 @@ def buy_ticket_from_wallet(id):
 
         amount = data['amount']
         new_otp = data['otp']
-        points_to_add = math.ceil(amount * 0.10)
+        points_to_add = math.ceil(float(amount) * 0.10)
 
         response = supabase.table("guest").select("guest_id", "wallet", "loyalty_points", "otp", "otp_valid_datetime").eq("guest_id", id).execute()
         if not response.data:
