@@ -108,7 +108,7 @@
       }
 
       try {
-        const BASE_URL = "http://127.0.0.1:8085/enterpark";
+        const BASE_URL = "http://127.0.0.1:8000/otp";
         const response = await axios.get(`${BASE_URL}/guest/${otp}`);
         showSnackbar("✅ Access granted! Enjoy your day 🎉", "success");
       } catch (error) {
