@@ -73,8 +73,8 @@ def connect_to_rabbitmq():
             print("✅ Connected to RabbitMQ")
             return connection
         except pika.exceptions.AMQPConnectionError:
-            print("⏳ RabbitMQ not ready. Retrying in 5 seconds...")
-            time.sleep(5)
+            print("⏳ RabbitMQ not ready. Retrying in 10 seconds...")
+            time.sleep(10)
     raise Exception("❌ Failed to connect to RabbitMQ after multiple attempts")
 
 def setup_rabbitmq():
