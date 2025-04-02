@@ -12,7 +12,6 @@ Before starting, make sure you have the following installed on your computer:
 - Visual Studio Code 💻
 
 
-
 ## 🚀 **2. Set Up**
 
 ### ⚠️ **Important:**
@@ -51,7 +50,6 @@ To access the frontend, go to http://localhost:8100/home.html
 For the list of ports, check out **Notes.md** for details about the different services running and their corresponding ports.
 
 To view API documentation for the respective services, go to http://localhost:[port number]/apidocs
-
 
 
 ## ❌ **5. Shutting Down**

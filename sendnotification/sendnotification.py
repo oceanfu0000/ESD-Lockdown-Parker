@@ -66,7 +66,7 @@ def connect_to_rabbitmq():
                 pika.ConnectionParameters(
                     host=AMQP_HOST,
                     port=AMQP_PORT,
-                    heartbeat=300,
+                    heartbeat=60,
                     blocked_connection_timeout=300
                 )
             )

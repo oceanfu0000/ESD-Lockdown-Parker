@@ -170,14 +170,14 @@ services:
     networks:
       - parker-net
 
-  frontend:
-    build:
-      context: .
-      dockerfile: ./frontend/Dockerfile
-    ports:
-      - "8100:8100"
-    networks:
-      - parker-net
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: ./frontend/Dockerfile
+  #   ports:
+  #     - "8100:8100"
+  #   networks:
+  #     - parker-net
 
   # kong-database:
   #   image: postgres:17.4   #postgres:15-alpine   #postgres:17.4
