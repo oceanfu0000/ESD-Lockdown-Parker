@@ -356,15 +356,19 @@ def validate_otp(otp):
 
         guest = response.data[0]
         otp_valid_datetime = guest.get("otp_valid_datetime")
-        if not otp_valid_datetime:
+
+        if otp_valid_datetime is None:
             sg_tz = pytz.timezone('Asia/Singapore')
             today = datetime.now(sg_tz).date()
-            end_of_day = sg_tz.localize(datetime(today.year, today.month, today.day, 23, 59, 59, 999999))
-            time_iso = end_of_day.isoformat()
-            supabase.table("guest").update({"otp_valid_datetime": time_iso}).eq("guest_id", guest["guest_id"]).execute()
-            return jsonify({"message": "OTP validated, OTP will be available till end of today."}), 200
 
-        if datetime.fromisoformat(otp_valid_datetime) < datetime.now(pytz.utc):
+            end_of_day = sg_tz.localize(datetime(today.year, today.month, today.day, 23, 59, 59, 999999))
+
+            time_iso = end_of_day.isoformat()
+
+            supabase.table("guest").update({"otp_valid_datetime": time_iso}).eq("guest_id", guest["guest_id"]).execute()
+            # return jsonify({"message": "OTP validated, OTP will be available till end of today."}), 200
+
+        elif datetime.fromisoformat(otp_valid_datetime) < datetime.now(pytz.utc):
             return jsonify({"message": "OTP has expired"}), 404
         return jsonify({"guest": guest}), 200
     except Exception as e:
