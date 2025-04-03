@@ -9,10 +9,13 @@ from telegram.ext import (
 )
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+import pika
+import json
 
 # Local imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from invokes import invoke_http
+from RabbitMQClient import RabbitMQClient
 
 # ------------------------------
 # Setup
@@ -30,6 +33,19 @@ bot = Bot(token=TOKEN)
 application = Application.builder().token(TOKEN).build()
 
 AWAITING_OTP, AWAITING_STAFFPASSWORD, AWAITING_BROADCASTMSG = range(3)
+
+# -----------------------------
+# RabbitMQ Configuration
+# -----------------------------
+exchange_name = "park_topic"
+exchange_type = "topic"
+
+rabbit_client = RabbitMQClient(
+    hostname="rabbitmq",
+    port=5672,
+    exchange_name=exchange_name,
+    exchange_type=exchange_type
+)
 
 # ------------------------------
 # Command Handlers
@@ -131,6 +147,20 @@ async def broadcast_msg_received(update: Update, context: CallbackContext):
         if staff_check.get("code", 200) == 200:
             guest_response = invoke_http(f"{guest_URL}/valid_chat_ids", method="GET")
             if guest_response.get("code", 200) == 200:
+                staff_info = staff_check["staff"][0]
+                data = {
+                    "user_id": staff_info["staff_id"],
+                    "user_type": "staff",
+                    "action": "Broadcast",
+                    "type": "Success",
+                    "message": f"Staff member {staff_info['staff_name']} broadcasted {msg}!" 
+                }
+                rabbit_client.channel.basic_publish(
+                    exchange=exchange_name,
+                    routing_key="enterpark.access",
+                    body=json.dumps(data),
+                    properties=pika.BasicProperties(delivery_mode=2),
+                    )
                 for cid in guest_response["chat_ids"]:
                     try:
                         await bot.send_message(chat_id=cid, text=msg)

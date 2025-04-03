@@ -24,4 +24,4 @@ COPY . /app
 EXPOSE 8084
 
 # Run the application
-CMD ["python", "./accesslogs/logs.py"]
+CMD ["python", "./logs/logs.py"]

@@ -6,7 +6,7 @@ Notification 8080 (Composite)
 Telegram 8081 (Composite/Wrapper)
 Guest 8082
 Staff 8083
-Access Logs 8084
+Logs 8084
 Enter_Park 8085 (Composite)
 Stripe 8086 (Wrapper)
 Make Payment 8087 (Composite)

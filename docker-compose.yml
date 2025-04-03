@@ -1,5 +1,5 @@
 # Run:
-# docker-compose up --build -d
+# docker compose up --build -d
 
 # Stop:
 # docker-compose down
@@ -68,10 +68,10 @@ services:
     networks:
       - parker-net
 
-  accesslogs:
+  log:
     build:
       context: .
-      dockerfile: ./accesslogs/Dockerfile
+      dockerfile: ./logs/Dockerfile
     env_file:
       - .env
     ports:

@@ -88,12 +88,25 @@ def guest_enterpark(otp):
     try:
         response = requests.get(f"{guest_URL}/validate/{otp}")
         if response.status_code == 200:
+            response_data = response.json()
+            data = {
+                "user_id": response_data["guest"]["guest_id"],
+                "user_type": "guest",
+                "action": "Entry",
+                 "type": "Success",
+                "message": f"Guest {response_data['guest']['guest_name']} entered the Park!"
+                }
+            rabbit_client.channel.basic_publish(
+                exchange=exchange_name,
+                routing_key="enterpark.access",
+                body=json.dumps(data),
+                properties=pika.BasicProperties(delivery_mode=2),
+                )
             open_door()
             return jsonify({"message": "Access granted! Door opening."}), 200
         else:
             return jsonify({
-                "message": "No valid ticket found. Please purchase a ticket.",
-                "redirect_url": f"{guest_URL}/buy_ticket"
+                "message": "No valid ticket found. Please purchase a ticket."
             }), 404
     except requests.exceptions.RequestException as e:
         log_error("enterpark", f"/guest/{otp} (GET)", e)
@@ -145,7 +158,9 @@ def staff_enterpark():
             open_door()
             try:
                 data = {
-                    "staff_id": response_data["Staff"]["staff_id"],
+                    "user_id": response_data["Staff"]["staff_id"],
+                    "user_type": "staff",
+                    "action": "Entry",
                     "type": "Success",
                     "message": f"Staff member {response_data['Staff']['staff_name']} entered the Park!"
                 }
@@ -165,7 +180,9 @@ def staff_enterpark():
         elif status == 403:
             try:
                 data = {
-                    "staff_id": response_data["Staff"]["staff_id"],
+                    "user_id": response_data["Staff"]["staff_id"],
+                    "user_type": "staff",
+                    "action": "Entry",
                     "type": "Failed",
                     "message": f"Staff member {response_data['Staff']['staff_name']} attempted to access the park but failed."
                 }
