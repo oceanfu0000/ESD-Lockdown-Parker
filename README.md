@@ -17,7 +17,27 @@ Before starting, make sure you have the following installed on your computer:
 ### ⚠️ **Important:**
 Make sure you have the `.env` **(root)**, `esdlocking.json` **(telegramservice)** , `credentials.json` and `token.json` **(emailservice)** file in your project folder!
 
+**Missing token.json?**
+
+Your token has expired/doesn't exist! Please do the following:
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip3 install -r requirements.txt
+cd emailservice
+python3 emailservice.py
+```
+Afterwards, go to postman and run http://127.0.0.1:8088/email (POST)
+   
+When prompted to login, please log in with the following details
+
+   **Email:** serviceatpark@gmail.com  
+   **Password:** lockdownparkerservice
+
+Token should be generated! You may proceed to step 1
+
 ### 🔧 **Step-by-Step Instructions:**
+
 
 1. **Navigate to the root directory of the project**:
    ```

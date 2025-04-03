@@ -580,6 +580,64 @@ def validate_chat_id(chat_id):
         return jsonify({"error": str(e)}), 500
 
 @staff_blueprint.route("/reset", methods=["PUT"])
+@swag_from({
+    'tags': ['Staff'],
+    'summary': 'Reset the failed login attempts for a staff member',
+    'description': 'This route allows an admin to reset the failed login attempts for a specific staff member identified by their staff_id.',
+    'parameters': [
+        {
+            'name': 'staff_id',
+            'in': 'body',
+            'required': True,
+            'description': 'The unique identifier for the staff member whose failed attempts need to be reset',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'staff_id': {'type': 'string', 'example': '67890'}
+                },
+                'required': ['staff_id']
+            }
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Successfully reset the failed login attempts for the specified staff member',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'message': {'type': 'string', 'example': "John Doe's attempts reset to 0"}
+                }
+            }
+        },
+        400: {
+            'description': 'Bad request, either the staff_id was missing or there was an error in updating the failed attempts',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Failed to update Chat ID'}
+                }
+            }
+        },
+        404: {
+            'description': 'Staff member with the provided staff_id was not found',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Staff not found with provided credentials'}
+                }
+            }
+        },
+        500: {
+            'description': 'Server error',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Server error: Error details'}
+                }
+            }
+        }
+    }
+})
 def reset_staff_attempt():
     try:
         data = request.json

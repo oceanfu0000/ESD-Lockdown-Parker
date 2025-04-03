@@ -29,6 +29,59 @@ logging.basicConfig(level=logging.INFO)
 # ---------------------------
 
 @logs_blueprint.route("", methods=["POST"])
+@swag_from({
+    'tags': ['Logs'],
+    'summary': 'Create an activity log entry',
+    'description': 'Create a new log entry with user_id, user_type, action, type, and message.',
+    'parameters': [
+        {
+            'name': 'data',
+            'in': 'body',
+            'required': True,
+            'description': 'Log entry details',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'user_id': {'type': 'string', 'example': '12345'},
+                    'user_type': {'type': 'string', 'example': 'staff'},
+                    'action': {'type': 'string', 'example': 'Login'},
+                    'type': {'type': 'string', 'example': 'Failed'},
+                    'message': {'type': 'string', 'example': 'Multiple failed login attempts.'}
+                },
+                'required': ['user_id', 'user_type', 'action', 'type', 'message']
+            }
+        }
+    ],
+    'responses': {
+        201: {
+            'description': 'Activity log created successfully',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'message': {'type': 'string', 'example': 'Activity log created successfully'}
+                }
+            }
+        },
+        400: {
+            'description': 'Missing required fields',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Missing required fields: staff_id, type, message'}
+                }
+            }
+        },
+        500: {
+            'description': 'Server error',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Server error: Error details'}
+                }
+            }
+        }
+    }
+})
 def create_log():
     try:
         data = request.get_json()
@@ -58,6 +111,48 @@ def create_log():
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @logs_blueprint.route("", methods=["GET"])
+@swag_from({
+    'tags': ['Logs'],
+    'summary': 'Get all activity logs',
+    'description': 'Fetch all activity logs.',
+    'responses': {
+        200: {
+            'description': 'Successfully fetched all activity logs',
+            'schema': {
+                'type': 'array',
+                'items': {
+                    'type': 'object',
+                    'properties': {
+                        'user_id': {'type': 'string', 'example': '12345'},
+                        'user_type': {'type': 'string', 'example': 'staff'},
+                        'action': {'type': 'string', 'example': 'Login'},
+                        'type': {'type': 'string', 'example': 'Failed'},
+                        'message': {'type': 'string', 'example': 'Multiple failed login attempts.'},
+                        'date_time': {'type': 'string', 'example': '2023-04-04T12:30:00'}
+                    }
+                }
+            }
+        },
+        404: {
+            'description': 'No activity logs found',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'No activity logs found'}
+                }
+            }
+        },
+        500: {
+            'description': 'Server error',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Server error: Error details'}
+                }
+            }
+        }
+    }
+})
 def read_all_logs():
     try:
         response = supabase.table("logs").select("*").execute()
@@ -72,6 +167,48 @@ def read_all_logs():
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @logs_blueprint.route("/guest", methods=["GET"])
+@swag_from({
+    'tags': ['Logs'],
+    'summary': 'Get all guest activity logs',
+    'description': 'Fetch all activity logs for guests.',
+    'responses': {
+        200: {
+            'description': 'Successfully fetched all guest activity logs',
+            'schema': {
+                'type': 'array',
+                'items': {
+                    'type': 'object',
+                    'properties': {
+                        'user_id': {'type': 'string', 'example': '12345'},
+                        'user_type': {'type': 'string', 'example': 'guest'},
+                        'action': {'type': 'string', 'example': 'Login'},
+                        'type': {'type': 'string', 'example': 'Failed'},
+                        'message': {'type': 'string', 'example': 'Multiple failed login attempts.'},
+                        'date_time': {'type': 'string', 'example': '2023-04-04T12:30:00'}
+                    }
+                }
+            }
+        },
+        404: {
+            'description': 'No guest activity logs found',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'No guest logs found'}
+                }
+            }
+        },
+        500: {
+            'description': 'Server error',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Server error: Error details'}
+                }
+            }
+        }
+    }
+})
 def read_all_guest():
     try:
         response = supabase.table("logs").select("*").eq("user_type","guest").execute()
@@ -85,6 +222,48 @@ def read_all_guest():
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @logs_blueprint.route("/staff", methods=["GET"])
+@swag_from({
+    'tags': ['Logs'],
+    'summary': 'Get all staff activity logs',
+    'description': 'Fetch all activity logs for staff members.',
+    'responses': {
+        200: {
+            'description': 'Successfully fetched all staff activity logs',
+            'schema': {
+                'type': 'array',
+                'items': {
+                    'type': 'object',
+                    'properties': {
+                        'user_id': {'type': 'string', 'example': '12345'},
+                        'user_type': {'type': 'string', 'example': 'staff'},
+                        'action': {'type': 'string', 'example': 'Login'},
+                        'type': {'type': 'string', 'example': 'Failed'},
+                        'message': {'type': 'string', 'example': 'Multiple failed login attempts.'},
+                        'date_time': {'type': 'string', 'example': '2023-04-04T12:30:00'}
+                    }
+                }
+            }
+        },
+        404: {
+            'description': 'No staff activity logs found',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'No staff logs found'}
+                }
+            }
+        },
+        500: {
+            'description': 'Server error',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Server error: Error details'}
+                }
+            }
+        }
+    }
+})
 def read_all_staff():
     try:
         response = supabase.table("logs").select("*").eq("user_type","staff").execute()
@@ -98,6 +277,58 @@ def read_all_staff():
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @logs_blueprint.route("/guest/<guest_id>", methods=["GET"])
+@swag_from({
+    'tags': ['Logs'],
+    'summary': 'Get logs for a specific guest by guest_id',
+    'description': 'Fetch all activity logs for a guest based on their guest_id.',
+    'parameters': [
+        {
+            'name': 'guest_id',
+            'in': 'path',
+            'required': True,
+            'description': 'Unique identifier for the guest',
+            'type': 'string',
+            'example': '12345'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Successfully fetched guest activity logs',
+            'schema': {
+                'type': 'array',
+                'items': {
+                    'type': 'object',
+                    'properties': {
+                        'user_id': {'type': 'string', 'example': '12345'},
+                        'user_type': {'type': 'string', 'example': 'guest'},
+                        'action': {'type': 'string', 'example': 'Login'},
+                        'type': {'type': 'string', 'example': 'Failed'},
+                        'message': {'type': 'string', 'example': 'Multiple failed login attempts.'},
+                        'date_time': {'type': 'string', 'example': '2023-04-04T12:30:00'}
+                    }
+                }
+            }
+        },
+        404: {
+            'description': 'No logs found for the specified guest_id',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'No logs found for guest_id 12345'}
+                }
+            }
+        },
+        500: {
+            'description': 'Server error',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Server error: Error details'}
+                }
+            }
+        }
+    }
+})
 def read_guest_logs(guest_id):
     try:
         response = supabase.table("logs").select("*").eq("user_type", "guest").eq("user_id", guest_id).execute()
@@ -111,6 +342,58 @@ def read_guest_logs(guest_id):
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @logs_blueprint.route("/staff/<staff_id>", methods=["GET"])
+@swag_from({
+    'tags': ['Logs'],
+    'summary': 'Get logs for a specific staff member by staff_id',
+    'description': 'Fetch all activity logs for a staff member based on their staff_id.',
+    'parameters': [
+        {
+            'name': 'staff_id',
+            'in': 'path',
+            'required': True,
+            'description': 'Unique identifier for the staff member',
+            'type': 'string',
+            'example': '67890'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Successfully fetched staff activity logs',
+            'schema': {
+                'type': 'array',
+                'items': {
+                    'type': 'object',
+                    'properties': {
+                        'user_id': {'type': 'string', 'example': '67890'},
+                        'user_type': {'type': 'string', 'example': 'staff'},
+                        'action': {'type': 'string', 'example': 'Login'},
+                        'type': {'type': 'string', 'example': 'Failed'},
+                        'message': {'type': 'string', 'example': 'Multiple failed login attempts.'},
+                        'date_time': {'type': 'string', 'example': '2023-04-04T12:30:00'}
+                    }
+                }
+            }
+        },
+        404: {
+            'description': 'No logs found for the specified staff_id',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'No logs found for staff_id 67890'}
+                }
+            }
+        },
+        500: {
+            'description': 'Server error',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Server error: Error details'}
+                }
+            }
+        }
+    }
+})
 def read_staff_logs(staff_id):
     try:
         response = supabase.table("logs").select("*").eq("user_type", "staff").eq("user_id", staff_id).execute()
