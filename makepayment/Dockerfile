@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # Copy the RabbitMQClient module
 COPY ../RabbitMQClient.py /app/RabbitMQClient.py
 
+# Copy the invokes module
+COPY ../invokes.py /app/invokes.py
+
 # Copy the application code
 COPY ./makepayment /app/makepayment
 
