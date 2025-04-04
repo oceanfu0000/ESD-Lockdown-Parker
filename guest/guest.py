@@ -87,7 +87,8 @@ def create_guest():
         }).execute()
 
         if response.data:
-            return jsonify({"message": "Guest created successfully"}), 201
+            guest_id = response.data[0].get("guest_id")
+            return jsonify({"message": "Guest created successfully", "guest_id": guest_id}), 201
         return jsonify({"error": "Failed to create guest"}), 400
     except Exception as e:
         return error_response(e)

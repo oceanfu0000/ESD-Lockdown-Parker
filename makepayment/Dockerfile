@@ -10,8 +10,11 @@ COPY ../requirements.txt /app/requirements.txt
 # Install dependencies
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copy the contents of the staff folder into the container
-COPY . /app
+# Copy the RabbitMQClient module
+COPY ../RabbitMQClient.py /app/RabbitMQClient.py
+
+# Copy the application code
+COPY ./makepayment /app/makepayment
 
 # Expose the port the app runs on
 EXPOSE 8087
