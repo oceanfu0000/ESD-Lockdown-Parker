@@ -36,7 +36,7 @@ QUEUES = {
 # External Service URLs
 # -------------------------------
 
-LOG_URL = os.getenv("ACCESS_LOGS_URL")
+LOG_URL = os.getenv("LOGS_URL")
 ERROR_URL = os.getenv("ERROR_URL")
 EMAIL_URL = os.getenv("EMAIL_URL")
 TELEGRAM_TOKEN = os.getenv("TOKEN")
@@ -114,9 +114,9 @@ def callback(channel, method, properties, body):
             log_url = LOG_URL
             log_type = "Access"
             type = message.get("type")
-            if type == "Failed":
-                staff_id = message.get("staff_id")
-
+            user_type = message.get("user_type")
+            if user_type == "staff" and type == "Failed":
+                staff_id = message.get("user_id")
                 try:
                     # staff name
                     response = supabase.table("staff").select("staff_name").eq("staff_id", staff_id).execute()
@@ -125,15 +125,22 @@ def callback(channel, method, properties, body):
                     if not staff:
                         print(f"⚠️ Staff not found for ID {staff_id}")
                         return
+                    
                     staff_name = staff.get("staff_name")
 
                     response = supabase.table("staff").select("chat_id").execute()
-                    staff = response.data[0] if response.data else None
 
-                    for staff in response.data:
-                        chat_id = staff.get("chat_id")
-                        send_message(chat_id, f"❌ {staff_name} has made multiple unsuccessful attempts to access Door 1.")
+                    if not response.data:
+                        print("⚠️ No staff chat IDs found.")
+                        return
 
+                    for staff_member in response.data:
+                        chat_id = staff_member.get("chat_id")
+                        if chat_id:
+                            send_message(chat_id, f"❌ {staff_name} has made multiple unsuccessful attempts to access Door 1.")
+                        else:
+                            print(f"⚠️ No chat_id found for staff member {staff_member}")
+        
                 except Exception as e:
                     print(f"❌ Failed to fetch staff from Supabase: {e}")
 

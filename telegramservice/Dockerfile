@@ -10,9 +10,14 @@ COPY ../requirements.txt /app/requirements.txt
 # Install dependencies
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copy the contents of the staff folder into the container
-COPY . /app
-COPY ./telegramservice/esdlocking.json /app/esdlocking.json
+# Copy the RabbitMQClient module
+COPY ../RabbitMQClient.py /app/RabbitMQClient.py
+
+# Copy the invokes module
+COPY ../invokes.py /app/invokes.py
+
+# Copy the application code
+COPY ./telegramservice /app/telegramservice
 
 # Run the application
 CMD ["python", "./telegramservice/telegramservice.py"]

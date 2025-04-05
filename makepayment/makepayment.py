@@ -25,6 +25,7 @@ payment_blueprint = Blueprint("makepayment", __name__)
 # RabbitMQ Configuration
 exchange_name = "park_topic"
 exchange_type = "topic"
+
 rabbit_client = RabbitMQClient(
     hostname="rabbitmq",
     port=5672,
@@ -115,6 +116,21 @@ def buyticket():
                 method="PUT",
                 json={"otp": otp, "amount": charge["amount"]},
             )
+            # Get Guest Info
+            guest_data = invoke_http(f"{guest_URL}/{guest_id}")
+            data = {
+                "user_id": guest_data["guest"]["guest_id"],
+                "user_type": "guest",
+                "action": "Payment",
+                 "type": "Success",
+                "message": f"Guest {guest_data['guest']['guest_name']} purchased a ticket via Credit/Debit Card!"
+                }
+            rabbit_client.channel.basic_publish(
+                exchange=exchange_name,
+                routing_key="enterpark.access",
+                body=json.dumps(data),
+                properties=pika.BasicProperties(delivery_mode=2),
+                )
 
             rabbit_client.channel.basic_publish(
                 exchange=exchange_name,
@@ -190,6 +206,21 @@ def buyticketbyloyalty():
             method="PUT",
             json={"otp": otp, "points": points},
         )
+        # Get Guest Info
+        guest_data = invoke_http(f"{guest_URL}/{guest_id}")
+        data = {
+                "user_id": guest_data["guest"]["guest_id"],
+                "user_type": "guest",
+                "action": "Payment",
+                 "type": "Success",
+                "message": f"Guest {guest_data['guest']['guest_name']} purchased a ticket via Loyalty Points!"
+                }
+        rabbit_client.channel.basic_publish(
+                exchange=exchange_name,
+                routing_key="enterpark.access",
+                body=json.dumps(data),
+                properties=pika.BasicProperties(delivery_mode=2),
+                )
 
         rabbit_client.channel.basic_publish(
             exchange=exchange_name,
@@ -266,6 +297,21 @@ def buyticketbywallet():
             method="PUT",
             json={"otp": otp, "amount": amount},
         )
+        # Get Guest Info
+        guest_data = invoke_http(f"{guest_URL}/{guest_id}")
+        data = {
+                "user_id": guest_data["guest"]["guest_id"],
+                "user_type": "guest",
+                "action": "Payment",
+                 "type": "Success",
+                "message": f"Guest {guest_data['guest']['guest_name']} purchased a ticket via Wallet!"
+                }
+        rabbit_client.channel.basic_publish(
+                exchange=exchange_name,
+                routing_key="enterpark.access",
+                body=json.dumps(data),
+                properties=pika.BasicProperties(delivery_mode=2),
+                )
 
         rabbit_client.channel.basic_publish(
             exchange=exchange_name,
@@ -334,6 +380,21 @@ def topupwallet():
                 method="PUT",
                 json={"wallet": amount},
             )
+            # Get Guest Info
+            guest_data = invoke_http(f"{guest_URL}/{guest_id}")
+            data = {
+                    "user_id": guest_data["guest"]["guest_id"],
+                    "user_type": "guest",
+                    "action": "Payment",
+                    "type": "Success",
+                    "message": f"Guest {guest_data['guest']['guest_name']} top up {amount} to their wallet!"
+                    }
+            rabbit_client.channel.basic_publish(
+                    exchange=exchange_name,
+                    routing_key="enterpark.access",
+                    body=json.dumps(data),
+                    properties=pika.BasicProperties(delivery_mode=2),
+                    )
             return jsonify({"message": "Payment successful! Wallet Top-up."}), 200
 
         return jsonify({"error": "Stripe payment failed"}), 400

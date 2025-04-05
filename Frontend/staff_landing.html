@@ -3,20 +3,20 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Staff Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Park Management Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
+    @import url("https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap");
 
     :root {
       --primary-color: #3498db;
       --secondary-color: #2c3e50;
       --success-color: #2ecc71;
       --danger-color: #e74c3c;
+      --warning-color: #f39c12;
       --light-bg: #f5f9fc;
       --card-bg: #ffffff;
       --border-radius: 12px;
@@ -24,7 +24,7 @@
 
     body {
       padding-top: 80px;
-      font-family: 'Comfortaa', cursive;
+      font-family: "Comfortaa", cursive;
       background-color: var(--light-bg);
       color: #333;
     }
@@ -52,6 +52,18 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+    }
+
+    .staff-header {
+      background-color: var(--primary-color);
+    }
+
+    .guest-header {
+      background-color: var(--secondary-color);
+    }
+
+    .reset-header {
+      background-color: var(--warning-color);
     }
 
     .card-header i {
@@ -130,10 +142,26 @@
       margin: 0 auto;
     }
 
+    .guest-btn {
+      background-color: var(--secondary-color);
+    }
+
+    .reset-btn {
+      background-color: var(--warning-color);
+    }
+
     .refresh-btn:hover {
       background-color: #2980b9;
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .guest-btn:hover {
+      background-color: #1a2530;
+    }
+
+    .reset-btn:hover {
+      background-color: #e67e22;
     }
 
     .refresh-btn i {
@@ -162,12 +190,36 @@
       margin-left: 10px;
     }
 
+    .guest-count {
+      background-color: rgba(44, 62, 80, 0.1);
+      color: var(--secondary-color);
+    }
+
+    .search-container {
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      border-radius: 20px;
+      padding: 10px 20px;
+      border: 1px solid #ddd;
+      width: 100%;
+    }
+
+    .staff-id-input {
+      border-radius: 8px;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      width: 70%;
+      margin-right: 10px;
+    }
+
     @media (max-width: 768px) {
       .card-header {
         flex-direction: column;
         align-items: flex-start;
       }
-      
+
       .log-count {
         margin-left: 0;
         margin-top: 10px;
@@ -181,16 +233,21 @@
 
   <div class="dashboard-container">
     <div class="row">
+      <!-- Staff Logs Section -->
       <div class="col-12">
         <div class="card">
-          <div class="card-header">
+          <div class="card-header staff-header">
             <div class="card-header-content">
-              <i class="bi bi-journal-text"></i>
-              <h2 class="mb-0">Park Access Logs</h2>
+              <i class="bi bi-person-badge"></i>
+              <h2 class="mb-0">Staff Access Logs</h2>
             </div>
-            <span class="log-count" id="parkLogCount">0 logs</span>
+            <span class="log-count" id="staffLogCount">0 logs</span>
           </div>
           <div class="card-body">
+            <div class="search-container">
+              <input type="text" class="search-input" id="staffSearchInput" placeholder="Search by staff ID..."
+                onkeyup="searchStaff()" />
+            </div>
             <div class="table-container">
               <div class="table-responsive">
                 <table class="table table-hover">
@@ -199,53 +256,109 @@
                       <th>Log ID</th>
                       <th>Staff ID</th>
                       <th>Type</th>
+                      <th>Action</th>
                       <th>Message</th>
                       <th>Date & Time</th>
                     </tr>
                   </thead>
-                  <tbody id="logTableBody">
-                    <!-- Logs will be inserted here -->
+                  <tbody id="staffTableBody">
+                    <!-- Staff logs will be inserted here -->
                   </tbody>
                 </table>
               </div>
             </div>
-            <button class="btn refresh-btn" onclick="checkParkLogs()">
-              <i class="bi bi-arrow-clockwise"></i> Refresh Park Logs
+            <button class="btn refresh-btn" onclick="checkStaffLogs()">
+              <i class="bi bi-arrow-clockwise"></i> Refresh Staff Logs
             </button>
           </div>
         </div>
       </div>
 
+      <!-- Guest Logs Section -->
       <div class="col-12">
         <div class="card">
-          <div class="card-header">
+          <div class="card-header guest-header">
             <div class="card-header-content">
-              <i class="bi bi-person-badge"></i>
-              <h2 class="mb-0">Your Access Logs</h2>
+              <i class="bi bi-people"></i>
+              <h2 class="mb-0">Guest Access Logs</h2>
             </div>
-            <span class="log-count" id="ownLogCount">0 logs</span>
+            <span class="log-count guest-count" id="guestLogCount">0 logs</span>
           </div>
           <div class="card-body">
+            <div class="search-container">
+              <input type="text" class="search-input" id="guestSearchInput" placeholder="Search by guest name..."
+                onkeyup="searchGuests()" />
+            </div>
             <div class="table-container">
               <div class="table-responsive">
                 <table class="table table-hover">
                   <thead>
                     <tr>
                       <th>Log ID</th>
-                      <th>Staff ID</th>
+                      <th>Guest ID</th>
                       <th>Type</th>
+                      <th>Action</th>
                       <th>Message</th>
                       <th>Date & Time</th>
                     </tr>
                   </thead>
-                  <tbody id="ownTableBody">
-                    <!-- Own logs will be inserted here -->
+                  <tbody id="guestTableBody">
+                    <!-- Guest logs will be inserted here -->
                   </tbody>
                 </table>
               </div>
             </div>
-            <button class="btn refresh-btn" onclick="checkOwnLogs()">
-              <i class="bi bi-arrow-clockwise"></i> Refresh Your Logs
+            <button class="btn refresh-btn guest-btn" onclick="checkGuestLogs()">
+              <i class="bi bi-arrow-clockwise"></i> Refresh Guest Logs
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset Staff Attempts Section -->
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header reset-header">
+            <div class="card-header-content">
+              <i class="bi bi-arrow-counterclockwise"></i>
+              <h2 class="mb-0">Reset Staff Login Attempts</h2>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8 col-12 mb-3">
+                <div class="d-flex">
+                  <input type="text" class="staff-id-input" id="resetStaffIdInput"
+                    placeholder="Enter Staff ID to reset" />
+                  <button class="btn refresh-btn reset-btn" onclick="resetStaffAttempts()">
+                    <i class="bi bi-unlock"></i> Reset Attempts
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-4 col-12">
+                <div id="resetStatus" class="mt-2"></div>
+              </div>
+            </div>
+            <div class="table-container mt-4">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Staff ID</th>
+                      <th>Name</th>
+                      <th>Telegram Handle</th>
+                      <th>Failed Attempts</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lockedStaffTableBody">
+                    <!-- Locked staff will be inserted here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <button class="btn refresh-btn reset-btn" onclick="checkLockedStaff()">
+              <i class="bi bi-arrow-clockwise"></i> Refresh Locked Staff List
             </button>
           </div>
         </div>
@@ -259,144 +372,268 @@
 
   <script>
     const current_staff_id = localStorage.getItem("current_staff_id");
-    const BASE_URL = "http://127.0.0.1:8000/accesslogs";
+    const LOGS_URL = "http://127.0.0.1:8000/log";
+    const STAFF_URL = "http://127.0.0.1:8083/staff";
 
+    // Load navbar
     fetch("navbar.html")
-      .then(res => res.text())
-      .then(data => {
+      .then((res) => res.text())
+      .then((data) => {
         document.getElementById("navbar-placeholder").innerHTML = data;
       })
-      .catch(err => console.error("Navbar load error:", err));
+      .catch((err) => console.error("Navbar load error:", err));
 
-    async function checkParkLogs() {
+    // Format date for consistency
+    // function formatDate(dateString) {
+    //   const originalDate = new Date(dateString);
+    //   return originalDate.toLocaleString("en-SG", {
+    //     timeZone: "Asia/Singapore",
+    //   });
+    // }
+
+    let allStaffLogs = [];
+
+    // Update the checkStaffLogs function
+    async function checkStaffLogs() {
       try {
-        const response = await axios.get(BASE_URL);
-        const logs = response.data;
-        logs.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
-        const recentLogs = logs.slice(0, 10);
+        const response = await axios.get(LOGS_URL + "/staff");
+        allStaffLogs = response.data;
+        allStaffLogs.sort(
+          (a, b) => new Date(b.date_time) - new Date(a.date_time)
+        );
 
-        const tableBody = document.getElementById("logTableBody");
-        tableBody.innerHTML = "";
-        
-        document.getElementById("parkLogCount").textContent = `${logs.length} logs`;
+        document.getElementById(
+          "staffLogCount"
+        ).textContent = `${allStaffLogs.length} logs`;
 
-        if (recentLogs.length === 0) {
-          tableBody.innerHTML = `
-            <tr>
-              <td colspan="5">
-                <div class="empty-state">
-                  <i class="bi bi-inbox"></i>
-                  <p>No logs available</p>
-                </div>
-              </td>
-            </tr>
+        displayStaffLogs(allStaffLogs);
+      } catch (error) {
+        console.error("Error fetching staff logs:", error);
+        const tableBody = document.getElementById("staffTableBody");
+        tableBody.innerHTML = getErrorStateHTML("Error loading staff logs");
+      }
+    }
+
+    // Add a new function to display staff logs
+    function displayStaffLogs(logs) {
+      const tableBody = document.getElementById("staffTableBody");
+      tableBody.innerHTML = "";
+
+      if (logs.length === 0) {
+        tableBody.innerHTML = getEmptyStateHTML("No staff logs available");
+        return;
+      }
+
+      const recentLogs = logs.slice(0, 10);
+
+      recentLogs.forEach((log) => {
+        const row = document.createElement("tr");
+        row.className = log.type === "Success" ? "success-row" : "failed-row";
+
+        const typeBadgeClass =
+          log.type === "Success" ? "success-badge" : "failed-badge";
+
+        row.innerHTML = `
+      <td>${log.log_id}</td>
+      <td>${log.user_id}</td>
+      <td><span class="type-badge ${typeBadgeClass}">${log.type}</span></td>
+      <td>${log.action}</td>
+      <td>${log.message}</td>
+      <td>${new Date(log.date_time).toLocaleString("en-US", { timeZone: "UTC" })}</td>
+    `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Add a search function for staff
+    function searchStaff() {
+      const searchInput = document
+        .getElementById("staffSearchInput")
+        .value.toLowerCase();
+      const filteredLogs = allStaffLogs.filter((log) =>
+        log.message.toLowerCase().includes(searchInput)
+      );
+      displayStaffLogs(filteredLogs);
+    }
+
+    // Guest Logs Section
+    let allGuestLogs = [];
+
+    async function checkGuestLogs() {
+      try {
+        const response = await axios.get(LOGS_URL + "/guest");
+        allGuestLogs = response.data;
+        allGuestLogs.sort(
+          (a, b) => new Date(b.date_time) - new Date(a.date_time)
+        );
+
+        const tableBody = document.getElementById("guestTableBody");
+        document.getElementById(
+          "guestLogCount"
+        ).textContent = `${allGuestLogs.length} logs`;
+
+        displayGuestLogs(allGuestLogs);
+      } catch (error) {
+        console.error("Error fetching guest logs:", error);
+        const tableBody = document.getElementById("guestTableBody");
+        tableBody.innerHTML = getErrorStateHTML("Error loading guest logs");
+      }
+    }
+
+    function displayGuestLogs(logs) {
+      const tableBody = document.getElementById("guestTableBody");
+      tableBody.innerHTML = "";
+
+      if (logs.length === 0) {
+        tableBody.innerHTML = getEmptyStateHTML("No guest logs available");
+        return;
+      }
+
+      const recentLogs = logs.slice(0, 10);
+
+      recentLogs.forEach((log) => {
+        const row = document.createElement("tr");
+        row.className = log.type === "Success" ? "success-row" : "failed-row";
+
+        const typeBadgeClass =
+          log.type === "Success" ? "success-badge" : "failed-badge";
+
+        row.innerHTML = `
+            <td>${log.log_id}</td>
+            <td>${log.user_id}</td>
+            <td><span class="type-badge ${typeBadgeClass}">${log.type
+          }</span></td>
+            <td>${log.action}</td>
+            <td>${log.message}</td>
+            <td>${new Date(log.date_time).toLocaleString("en-US", { timeZone: "UTC" })}</td>
           `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function searchGuests() {
+      const searchInput = document
+        .getElementById("guestSearchInput")
+        .value.toLowerCase();
+      const filteredLogs = allGuestLogs.filter((log) =>
+        log.message.toLowerCase().includes(searchInput)
+      );
+      displayGuestLogs(filteredLogs);
+    }
+
+    // Reset Staff Attempts Section
+    async function checkLockedStaff() {
+      try {
+        const response = await axios.get(`${STAFF_URL}`);
+        const lockedStaff = response.data;
+
+        const tableBody = document.getElementById("lockedStaffTableBody");
+        tableBody.innerHTML = "";
+
+        if (lockedStaff.length === 0) {
+          tableBody.innerHTML = getEmptyStateHTML("No locked staff accounts");
           return;
         }
 
-        recentLogs.forEach(log => {
+        lockedStaff.forEach((staff) => {
           const row = document.createElement("tr");
-          row.className = log.type === "Success" ? "success-row" : "failed-row";
-          
-          const typeBadgeClass = log.type === "Success" ? "success-badge" : "failed-badge";
-          
           row.innerHTML = `
-            <td>${log.log_id}</td>
-            <td>${log.staff_id}</td>
-            <td><span class="type-badge ${typeBadgeClass}">${log.type}</span></td>
-            <td>${log.message}</td>
-            <td>${new Date(log.date_time).toLocaleString()}</td>
-          `;
+              <td>${staff.staff_id}</td>
+              <td>${staff.staff_name}</td>
+              <td>${staff.staff_tele}</td>
+              <td>${staff.failed_attempts}</td>
+              <td>
+                <button 
+                  class="btn btn-sm btn-warning" 
+                  onclick="resetSpecificStaff('${staff.staff_id}')"
+                >
+                  <i class="bi bi-unlock"></i> Reset
+                </button>
+              </td>
+            `;
           tableBody.appendChild(row);
         });
       } catch (error) {
-        console.error("Error fetching park logs:", error);
-        const tableBody = document.getElementById("logTableBody");
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="5">
-              <div class="empty-state">
-                <i class="bi bi-exclamation-triangle"></i>
-                <p>Error loading logs. Please try again.</p>
-              </div>
-            </td>
-          </tr>
-        `;
+        console.error("Error fetching locked staff:", error);
+        const tableBody = document.getElementById("lockedStaffTableBody");
+        tableBody.innerHTML = getErrorStateHTML("Error loading locked staff");
       }
     }
 
-    async function checkOwnLogs() {
-      if (!current_staff_id) {
-        alert("No staff ID found in local storage.");
+    async function resetStaffAttempts() {
+      const staffId = document
+        .getElementById("resetStaffIdInput")
+        .value.trim();
+      if (!staffId) {
+        showResetStatus("Please enter a staff ID", "danger");
         return;
       }
-    
+
       try {
-        const response = await axios.get(BASE_URL + "/" + current_staff_id);
-        const logs = response.data.accesslogs;
-        logs.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
-        const recentLogs = logs.slice(0, 10);
-
-        const ownTableBody = document.getElementById("ownTableBody");
-        ownTableBody.innerHTML = "";
-        
-        document.getElementById("ownLogCount").textContent = `${logs.length} logs`;
-
-        if (recentLogs.length === 0) {
-          ownTableBody.innerHTML = `
-            <tr>
-              <td colspan="5">
-                <div class="empty-state">
-                  <i class="bi bi-inbox"></i>
-                  <p>No personal logs available</p>
-                </div>
-              </td>
-            </tr>
-          `;
-          return;
-        }
-
-        recentLogs.forEach(log => {
-          const row = document.createElement("tr");
-          row.className = log.type === "Success" ? "success-row" : "failed-row";
-          
-          const typeBadgeClass = log.type === "Success" ? "success-badge" : "failed-badge";
-          
-          row.innerHTML = `
-            <td>${log.log_id}</td>
-            <td>${log.staff_id}</td>
-            <td><span class="type-badge ${typeBadgeClass}">${log.type}</span></td>
-            <td>${log.message}</td>
-            <td>${new Date(log.date_time).toLocaleString()}</td>
-          `;
-          ownTableBody.appendChild(row);
-        });
+        await resetSpecificStaff(staffId);
+        document.getElementById("resetStaffIdInput").value = "";
       } catch (error) {
-        console.error("Error fetching own logs:", error);
-        const ownTableBody = document.getElementById("ownTableBody");
-        ownTableBody.innerHTML = `
-          <tr>
-            <td colspan="5">
-              <div class="empty-state">
-                <i class="bi bi-exclamation-triangle"></i>
-                <p>Error loading your logs. Please try again.</p>
-              </div>
-            </td>
-          </tr>
-        `;
+        console.error("Error in reset handler:", error);
       }
     }
 
-    // Auto-load logs on page load and check for staff login
-    window.onload = () => {
-      if (!current_staff_id) {
-        window.location.href = "staff_login.html";
-        return;
+    async function resetSpecificStaff(staffId) {
+      try {
+        const response = await axios.put(`${STAFF_URL}/reset`, {
+          staff_id: staffId,
+        });
+        showResetStatus(response.data.message, "success");
+        checkLockedStaff();
+      } catch (error) {
+        console.error("Error resetting staff attempts:", error);
+        showResetStatus(
+          `Error: ${error.response?.data?.message || "Failed to reset staff attempts"
+          }`,
+          "danger"
+        );
       }
+    }
 
-      checkParkLogs();
-      checkOwnLogs();
-    };
+    function showResetStatus(message, type) {
+      const statusDiv = document.getElementById("resetStatus");
+      statusDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+
+      setTimeout(() => {
+        statusDiv.innerHTML = "";
+      }, 5000);
+    }
+
+    // Helper functions for empty and error states
+    function getEmptyStateHTML(message) {
+      return `
+          <tr>
+            <td colspan="6" class="empty-state">
+              <i class="bi bi-inbox"></i>
+              <p>${message}</p>
+            </td>
+          </tr>
+        `;
+    }
+
+    function getErrorStateHTML(message) {
+      return `
+          <tr>
+            <td colspan="6" class="empty-state">
+              <i class="bi bi-exclamation-triangle"></i>
+              <p>${message}</p>
+              <p>Please try again later</p>
+            </td>
+          </tr>
+        `;
+    }
+
+    // Initialize all data on page load
+    document.addEventListener("DOMContentLoaded", function () {
+      checkStaffLogs();
+      checkGuestLogs();
+      checkLockedStaff();
+    });
   </script>
 </body>
+
 </html>

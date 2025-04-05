@@ -10,8 +10,8 @@ COPY ../requirements.txt /app/requirements.txt
 # Install dependencies
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copy the contents of the staff folder into the container
-COPY . /app
+# Copy the application code
+COPY ./sendnotification /app/sendnotification
 
 # Expose the port the app runs on
 EXPOSE 8089

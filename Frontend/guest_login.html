@@ -206,6 +206,7 @@
 
         if (res.status === 201) {
           showSnackbar("🎉 Guest registered successfully!");
+          localStorage.setItem("guest_id", res.data.guest_id);
           setTimeout(() => window.location.href = "payment_portal.html", 1200);
 
         } else {

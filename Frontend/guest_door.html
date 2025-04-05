@@ -300,6 +300,7 @@
         try {
           const BASE_URL = "http://127.0.0.1:8000/enterpark";
           const response = await axios.get(`${BASE_URL}/guest/${otp}`);
+          console.log(response)
           showSnackbar(
             "✨ Welcome to Magic Kingdom! ✨ Enjoy your magical day! 🎢",
             "success"

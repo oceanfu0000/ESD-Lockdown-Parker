@@ -440,7 +440,6 @@ def validate():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @staff_blueprint.route("/update_chat_id_by_tele_password", methods=["PUT"])
 @swag_from({
     'tags': ['Staff'],
@@ -527,7 +526,6 @@ def update_staff_chat_id_by_tele_password():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @staff_blueprint.route("/validate_chat_id/<int:chat_id>", methods=["GET"])
 @swag_from({
     'tags': ['Staff'],
@@ -576,11 +574,94 @@ def validate_chat_id(chat_id):
     try:
         response = supabase.table("staff").select("*").eq("chat_id", chat_id).execute()
         if response.data:
-            return jsonify({"message": "Valid chat_id found"}), 200
+            return jsonify({"staff": response.data}), 200
         return jsonify({"error": "Chat ID not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@staff_blueprint.route("/reset", methods=["PUT"])
+@swag_from({
+    'tags': ['Staff'],
+    'summary': 'Reset the failed login attempts for a staff member',
+    'description': 'This route allows an admin to reset the failed login attempts for a specific staff member identified by their staff_id.',
+    'parameters': [
+        {
+            'name': 'staff_id',
+            'in': 'body',
+            'required': True,
+            'description': 'The unique identifier for the staff member whose failed attempts need to be reset',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'staff_id': {'type': 'string', 'example': '67890'}
+                },
+                'required': ['staff_id']
+            }
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Successfully reset the failed login attempts for the specified staff member',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'message': {'type': 'string', 'example': "John Doe's attempts reset to 0"}
+                }
+            }
+        },
+        400: {
+            'description': 'Bad request, either the staff_id was missing or there was an error in updating the failed attempts',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Failed to update Chat ID'}
+                }
+            }
+        },
+        404: {
+            'description': 'Staff member with the provided staff_id was not found',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Staff not found with provided credentials'}
+                }
+            }
+        },
+        500: {
+            'description': 'Server error',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string', 'example': 'Server error: Error details'}
+                }
+            }
+        }
+    }
+})
+def reset_staff_attempt():
+    try:
+        data = request.json
+        staff_id = data.get("staff_id")
+
+        if not staff_id:
+            return jsonify({"error": "staff_id is required"}), 400
+        
+        response = supabase.table("staff").select("*").eq("staff_id", staff_id).execute()
+        staff_name = response.data[0]["staff_name"]
+
+        if not response.data:
+            return jsonify({"error": "Staff not found with provided credentials"}), 404
+
+        # Attempt to update staff attempts
+        update_response = supabase.table("staff").update({"failed_attempts": 0}).eq("staff_id", staff_id).execute()
+
+        if update_response.data:
+            return jsonify({"message": f"{staff_name}'s attempts reset to 0"}), 200
+        return jsonify({"error": "Failed to update Chat ID"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 # ------------------------------
 # Register Blueprint & Run App
 # ------------------------------

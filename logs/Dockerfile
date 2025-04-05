@@ -17,11 +17,11 @@ COPY ../requirements.txt /app/requirements.txt
 # Install dependencies
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copy the contents of the staff folder into the container
-COPY . /app
+# Copy the application code
+COPY ./logs /app/logs
 
 # Expose the port the app runs on
 EXPOSE 8084
 
 # Run the application
-CMD ["python", "./accesslogs/logs.py"]
+CMD ["python", "./logs/logs.py"]
