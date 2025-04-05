@@ -18,8 +18,10 @@ from flasgger import Swagger, swag_from
 # ------------------------------
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
-TOKEN_PATH = "emailservice/token.json"
-CREDS_PATH = "emailservice/credentials.json"
+TOKEN_PATH = os.path.join(os.path.dirname(__file__), "token.json")
+# TOKEN_PATH = "emailservice/token.json"
+# CREDS_PATH = "emailservice/credentials.json"
+CREDS_PATH = os.path.join(os.path.dirname(__file__), "credentials.json")
 SENDER_EMAIL = "serviceatpark@gmail.com"  # Change if needed
 
 # ------------------------------
