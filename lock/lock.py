@@ -1,4 +1,5 @@
 from flask import Flask, Blueprint, jsonify
+from flasgger import Swagger
 import RPi.GPIO as GPIO
 
 # -------------------------------
@@ -6,6 +7,7 @@ import RPi.GPIO as GPIO
 # -------------------------------
 
 app = Flask(__name__)
+Swagger(app)  # Initialize Flasgger Swagger documentation
 lock_blueprint = Blueprint("lock", __name__)
 
 # -------------------------------
@@ -55,6 +57,29 @@ def close_lock():
 
 @lock_blueprint.route("/open", methods=["GET"])
 def open_lock_api():
+    """
+    Open the lock.
+    ---
+    tags:
+      - Lock Control
+    responses:
+      200:
+        description: Lock opened successfully or already open.
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Lock opened!"
+      500:
+        description: Failed to open lock.
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Failed to open lock: <error message>"
+    """
     try:
         if not app_lock_open:
             open_lock()
@@ -65,6 +90,29 @@ def open_lock_api():
 
 @lock_blueprint.route("/close", methods=["GET"])
 def close_lock_api():
+    """
+    Close the lock.
+    ---
+    tags:
+      - Lock Control
+    responses:
+      200:
+        description: Lock closed successfully or already closed.
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Lock closed!"
+      500:
+        description: Failed to close lock.
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Failed to close lock: <error message>"
+    """
     try:
         if app_lock_open:
             close_lock()
@@ -75,6 +123,29 @@ def close_lock_api():
 
 @lock_blueprint.route("/get_state", methods=["GET"])
 def get_lock_state():
+    """
+    Get the current state of the lock.
+    ---
+    tags:
+      - Lock Control
+    responses:
+      200:
+        description: Current lock state.
+        schema:
+          type: object
+          properties:
+            lock_state:
+              type: boolean
+              example: true
+      500:
+        description: Failed to get lock state.
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Failed to get lock state: <error message>"
+    """
     try:
         return jsonify({"lock_state": app_lock_open}), 200
     except Exception as e:

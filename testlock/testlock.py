@@ -1,12 +1,14 @@
 import logging
 from flask import Blueprint, Flask, jsonify
 from flask_cors import CORS
+from flasgger import Swagger, swag_from
 
 # --------------------------
 # Flask App Setup
 # --------------------------
 app = Flask(__name__)
 CORS(app)
+Swagger(app)  # Initialize Flasgger for Swagger documentation
 
 # --------------------------
 # Blueprint Setup
@@ -17,6 +19,37 @@ testlock_blueprint = Blueprint("testlock", __name__)
 # Routes
 # --------------------------
 @testlock_blueprint.route("/open", methods=["GET"])
+@swag_from({
+    'tags': ['Test Lock'],
+    'summary': 'Open the test lock',
+    'description': 'This endpoint simulates opening the test lock.',
+    'responses': {
+        200: {
+            'description': 'Lock opened successfully',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'message': {
+                        'type': 'string',
+                        'example': 'Lock opened'
+                    }
+                }
+            }
+        },
+        500: {
+            'description': 'Error opening lock',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {
+                        'type': 'string',
+                        'example': 'Error opening lock'
+                    }
+                }
+            }
+        }
+    }
+})
 def open_lock():
     try:
         print("🔓 Lock Opened")
@@ -26,6 +59,37 @@ def open_lock():
         return jsonify({"error": str(e)}), 500
 
 @testlock_blueprint.route("/close", methods=["GET"])
+@swag_from({
+    'tags': ['Test Lock'],
+    'summary': 'Close the test lock',
+    'description': 'This endpoint simulates closing the test lock.',
+    'responses': {
+        200: {
+            'description': 'Lock closed successfully',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'message': {
+                        'type': 'string',
+                        'example': 'Lock closed'
+                    }
+                }
+            }
+        },
+        500: {
+            'description': 'Error closing lock',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {
+                        'type': 'string',
+                        'example': 'Error closing lock'
+                    }
+                }
+            }
+        }
+    }
+})
 def close_lock():
     try:
         print("🔒 Lock Closed")

@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+"""
+A standalone script to consume RabbitMQ messages and process them with Supabase integration.
+
+This module sets up a RabbitMQ consumer that listens on multiple queues defined by routing keys.
+Depending on the message type, it performs various actions such as logging errors, handling access
+attempts, and sending notifications via Telegram or email. Environment variables for external services
+are loaded using dotenv.
+
+Modules:
+    time, pika, os, json, requests: Standard libraries and external dependencies.
+    supabase: For interacting with the Supabase backend.
+    dotenv: To load environment variables.
+"""
 
 import time
 import pika
@@ -47,6 +60,19 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 # -------------------------------
 
 def send_message(chat_id, text):
+    """
+    Send a Telegram message using the bot API.
+
+    Args:
+        chat_id (str/int): The Telegram chat ID to which the message should be sent.
+        text (str): The text message to send.
+
+    Returns:
+        None
+
+    Side Effects:
+        Prints the status of the Telegram message delivery.
+    """
     try:
         response = requests.post(TELEGRAM_API_URL, json={"chat_id": chat_id, "text": text})
         response.raise_for_status()
@@ -59,6 +85,18 @@ def send_message(chat_id, text):
 # -------------------------------
 
 def connect_to_rabbitmq():
+    """
+    Attempt to connect to the RabbitMQ broker with retries.
+
+    Tries to establish a connection up to 5 times. If RabbitMQ is not ready, it waits 10 seconds
+    between attempts.
+
+    Returns:
+        pika.BlockingConnection: An active connection to RabbitMQ.
+
+    Raises:
+        Exception: If unable to connect after multiple attempts.
+    """
     for i in range(5):
         try:
             print(f"Attempt {i+1}: Connecting to RabbitMQ at {AMQP_HOST}:{AMQP_PORT}...")
@@ -78,6 +116,20 @@ def connect_to_rabbitmq():
     raise Exception("❌ Failed to connect to RabbitMQ after multiple attempts")
 
 def setup_rabbitmq():
+    """
+    Set up RabbitMQ exchange and queues.
+
+    Connects to RabbitMQ, declares the exchange and queues, and binds each queue to the exchange
+    using its corresponding routing key.
+
+    Returns:
+        tuple: A tuple containing:
+            - channel (pika.adapters.blocking_connection.BlockingChannel): The channel for communication.
+            - connection (pika.BlockingConnection): The established connection to RabbitMQ.
+
+    Raises:
+        Exception: If there is an error during the setup process.
+    """
     try:
         connection = connect_to_rabbitmq()
         channel = connection.channel()
@@ -101,6 +153,28 @@ def setup_rabbitmq():
 # -------------------------------
 
 def callback(channel, method, properties, body):
+    """
+    Process incoming messages from RabbitMQ.
+
+    Decodes the JSON message and determines the action based on the routing key:
+      - For error messages, it sets the log endpoint to ERROR_URL.
+      - For access messages, it may fetch staff details from Supabase and send Telegram alerts.
+      - For payment notifications, it fetches guest information and sends notifications via Telegram
+        and email.
+      - Logs the message to an external API if applicable.
+
+    Args:
+        channel: The RabbitMQ channel.
+        method: Delivery method containing routing key details.
+        properties: Message properties.
+        body (bytes): The raw message body (JSON encoded).
+
+    Returns:
+        None
+
+    Side Effects:
+        May send Telegram messages, emails, and log data via API.
+    """
     try:
         message = json.loads(body)
         routing_key = method.routing_key
@@ -113,12 +187,12 @@ def callback(channel, method, properties, body):
         elif routing_key.endswith(".access"):
             log_url = LOG_URL
             log_type = "Access"
-            type = message.get("type")
+            msg_type = message.get("type")
             user_type = message.get("user_type")
-            if user_type == "staff" and type == "Failed":
+            if user_type == "staff" and msg_type == "Failed":
                 staff_id = message.get("user_id")
                 try:
-                    # staff name
+                    # Fetch staff name from Supabase
                     response = supabase.table("staff").select("staff_name").eq("staff_id", staff_id).execute()
                     staff = response.data[0] if response.data else None
 
@@ -180,7 +254,7 @@ def callback(channel, method, properties, body):
             except Exception as e:
                 print(f"❌ Failed to fetch guest from Supabase: {e}")
 
-            return  # No logging for notifications
+            return  # No further logging for notifications
 
         else:
             print(f"⚠️ Unknown routing key: {routing_key}")
@@ -205,6 +279,19 @@ def callback(channel, method, properties, body):
 # -------------------------------
 
 def start_rabbitmq_consumer():
+    """
+    Initialize and start the RabbitMQ consumer.
+
+    This function sets up the RabbitMQ exchange and queues, registers the callback for each queue,
+    and begins consuming messages. It handles keyboard interrupts and ensures the connection is closed
+    upon termination.
+
+    Returns:
+        None
+
+    Side Effects:
+        Listens indefinitely for incoming messages until interrupted.
+    """
     try:
         channel, connection = setup_rabbitmq()
 
@@ -231,6 +318,11 @@ def start_rabbitmq_consumer():
 # -------------------------------
 
 if __name__ == "__main__":
+    """
+    Entry point of the script.
+
+    This block starts the RabbitMQ consumer and handles any exceptions that may occur during startup.
+    """
     try:
         start_rabbitmq_consumer()
     except Exception as e:
