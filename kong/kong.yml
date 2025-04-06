@@ -17,14 +17,15 @@ services:
           - /staff
         strip_path: false
 
-  - name: accesslogs-service
-    url: http://accesslogs:8084
+  - name: log-service
+    url: http://log:8084
     routes:
-      - name: accesslogs-route
+      - name: log-route
         paths:
-          - /accesslogs
+          - /accesslog
+          - /log
         strip_path: false
-
+          
   - name: enterpark-service
     url: http://enterpark:8085
     routes:
