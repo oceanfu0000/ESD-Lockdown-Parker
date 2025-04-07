@@ -447,7 +447,7 @@
       updateStatus("VERIFYING CREDENTIALS...");
       
       try {
-        const BASE_URL = "http://127.0.0.1:8085/enterpark";
+        const BASE_URL = "http://127.0.0.1:8000/enterpark";
         const response = await axios.post(`${BASE_URL}/staff`, {
           staff_name,
           password

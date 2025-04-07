@@ -1,0 +1,78 @@
+_format_version: "3.0"
+services:
+
+  - name: guest-service
+    url: http://guest:8082
+    routes:
+      - name: guest-route
+        paths:
+          - /guest
+        strip_path: false
+
+  - name: staff-service
+    url: http://staff:8083
+    routes:
+      - name: staff-route
+        paths:
+          - /staff
+        strip_path: false
+
+  - name: log-service
+    url: http://log:8084
+    routes:
+      - name: log-route
+        paths:
+          - /accesslog
+          - /log
+        strip_path: false
+          
+  - name: enterpark-service
+    url: http://enterpark:8085
+    routes:
+      - name: enterpark-route
+        paths:
+          - /enterpark
+        strip_path: false
+
+  - name: stripe-service
+    url: http://stripeservice:8086
+    routes:
+      - name: stripe-route
+        paths:
+          - /stripeservice
+        strip_path: false
+
+  - name: makepayment-service
+    url: http://makepayment:8087
+    routes:
+      - name: makepayment-route
+        paths:
+          - /makepayment
+        strip_path: false
+
+  - name: emailservice
+    url: http://emailservice:8088
+    routes:
+      - name: email-route
+        paths:
+          - /email
+        strip_path: false
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - "*"
+      exposed_headers:
+        - "*"
+      credentials: true
+      max_age: 3600
