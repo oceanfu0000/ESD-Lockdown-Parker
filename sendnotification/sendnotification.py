@@ -214,7 +214,7 @@ def callback(channel, method, properties, body):
                 except Exception as e:
                     print(f"❌ Failed to fetch staff: {e}")
 
-        if routing_key == "payment.notification":
+        elif routing_key == "payment.notification":
             guest_id = message.get("guest_id")
 
             if not guest_id:
@@ -258,6 +258,16 @@ def callback(channel, method, properties, body):
         else:
             print(f"⚠️ Unknown routing key: {routing_key}")
             return
+
+        # POST log to API
+        try:
+            api_response = requests.post(log_url, json=message)
+            if api_response.status_code == 201:
+                print(f"✅ {log_type} log saved.")
+            else:
+                print(f"❌ Failed to log {log_type}: {api_response.text}")
+        except Exception as e:
+            print(f"❌ Logging error to {log_url} failed: {e}")
 
     except Exception as e:
         print(f"🔥 Error processing message: {e}")
