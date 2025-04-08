@@ -214,8 +214,9 @@ def callback(channel, method, properties, body):
                 except Exception as e:
                     print(f"❌ Failed to fetch staff: {e}")
 
-        elif routing_key == "payment.notification":
+        if routing_key == "payment.notification":
             guest_id = message.get("guest_id")
+
             if not guest_id:
                 print("⚠️ guest_id missing in message")
                 return
@@ -223,6 +224,8 @@ def callback(channel, method, properties, body):
             try:
                 response = requests.get(f"{GUEST_URL}/{guest_id}")
                 guest = response.json()
+                guest = guest.get("guest")
+
                 if response.status_code != 200:
                     print(f"⚠️ Guest not found for ID {guest_id}")
                     return
@@ -230,6 +233,7 @@ def callback(channel, method, properties, body):
                 chat_id = guest.get("chat_id")
                 otp = guest.get("otp")
                 email = guest.get("guest_email")
+                print(f"📧 Sending OTP {otp} to {email}")
 
                 if chat_id:
                     send_message(chat_id, f"🎫 Your OTP is {otp}! Thanks for purchasing a ticket.")
