@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-A standalone script to consume RabbitMQ messages and process them with Supabase integration.
+A standalone script to consume RabbitMQ messages
 
 This module sets up a RabbitMQ consumer that listens on multiple queues defined by routing keys.
 Depending on the message type, it performs various actions such as logging errors, handling access
@@ -9,7 +9,6 @@ are loaded using dotenv.
 
 Modules:
     time, pika, os, json, requests: Standard libraries and external dependencies.
-    supabase: For interacting with the Supabase backend.
     dotenv: To load environment variables.
 """
 
@@ -18,17 +17,13 @@ import pika
 import os
 import json
 import requests
-from supabase import create_client, Client
 from dotenv import load_dotenv
 
 # -------------------------------
-# Environment & Supabase Setup
+# Environment
 # -------------------------------
 
 load_dotenv()
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # -------------------------------
 # RabbitMQ Configuration
@@ -52,6 +47,8 @@ QUEUES = {
 LOG_URL = os.getenv("LOGS_URL")
 ERROR_URL = os.getenv("ERROR_URL")
 EMAIL_URL = os.getenv("EMAIL_URL")
+STAFF_URL = os.getenv("STAFF_URL")
+GUEST_URL = os.getenv("GUEST_URL")
 TELEGRAM_TOKEN = os.getenv("TOKEN")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 
@@ -158,7 +155,7 @@ def callback(channel, method, properties, body):
 
     Decodes the JSON message and determines the action based on the routing key:
       - For error messages, it sets the log endpoint to ERROR_URL.
-      - For access messages, it may fetch staff details from Supabase and send Telegram alerts.
+      - For access messages, it may fetch staff details and send Telegram alerts.
       - For payment notifications, it fetches guest information and sends notifications via Telegram
         and email.
       - Logs the message to an external API if applicable.
@@ -192,17 +189,17 @@ def callback(channel, method, properties, body):
             if user_type == "staff" and msg_type == "Failed":
                 staff_id = message.get("user_id")
                 try:
-                    # Fetch staff name from Supabase
-                    response = supabase.table("staff").select("staff_name").eq("staff_id", staff_id).execute()
-                    staff = response.data[0] if response.data else None
-
-                    if not staff:
+                    # Fetch staff name from staff 
+                    # response = supabase.table("staff").select("staff_name").eq("staff_id", staff_id).execute()
+                    response = requests.get(STAFF_URL+f"/staff/{staff_id}")
+                    staff = response.json()
+                    if response.status_code != 200:
                         print(f"⚠️ Staff not found for ID {staff_id}")
                         return
-                    
+
                     staff_name = staff.get("staff_name")
 
-                    response = supabase.table("staff").select("chat_id").execute()
+                    response = requests.get(STAFF_URL+f"/staff")
 
                     if not response.data:
                         print("⚠️ No staff chat IDs found.")
@@ -216,7 +213,7 @@ def callback(channel, method, properties, body):
                             print(f"⚠️ No chat_id found for staff member {staff_member}")
         
                 except Exception as e:
-                    print(f"❌ Failed to fetch staff from Supabase: {e}")
+                    print(f"❌ Failed to fetch staff: {e}")
 
         elif routing_key == "payment.notification":
             guest_id = message.get("guest_id")
@@ -225,10 +222,9 @@ def callback(channel, method, properties, body):
                 return
 
             try:
-                response = supabase.table("guest").select("*").eq("guest_id", guest_id).execute()
-                guest = response.data[0] if response.data else None
-
-                if not guest:
+                response = requests.get(GUEST_URL+f"/guest/{guest_id}")
+                guest = response.json()
+                if response.status_code != 200:
                     print(f"⚠️ Guest not found for ID {guest_id}")
                     return
 
@@ -252,7 +248,7 @@ def callback(channel, method, properties, body):
                         print(f"❌ Failed to send email: {e}")
 
             except Exception as e:
-                print(f"❌ Failed to fetch guest from Supabase: {e}")
+                print(f"❌ Failed to fetch guest: {e}")
 
             return  # No further logging for notifications
 
