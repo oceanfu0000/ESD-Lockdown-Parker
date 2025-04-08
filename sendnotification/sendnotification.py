@@ -221,7 +221,7 @@ def callback(channel, method, properties, body):
                 return
 
             try:
-                response = requests.get(GUEST_URL+f"/guest/{guest_id}")
+                response = requests.get(f"{GUEST_URL}/{guest_id}")
                 guest = response.json()
                 if response.status_code != 200:
                     print(f"⚠️ Guest not found for ID {guest_id}")
