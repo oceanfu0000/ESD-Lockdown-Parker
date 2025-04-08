@@ -71,6 +71,12 @@ For the list of ports, check out **Notes.md** for details about the different se
 
 To view API documentation for the respective services, go to http://localhost:[port number]/apidocs
 
+If there is no endpoint for the files (API), you can use pydocs to read the documentation. E.g.
+
+```
+python -m pydoc amqp_setup
+```
+
 
 ## ❌ **5. Shutting Down**
 
