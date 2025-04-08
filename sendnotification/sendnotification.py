@@ -192,7 +192,6 @@ def callback(channel, method, properties, body):
                     # Fetch staff name from staff 
                     response = requests.get(f"{STAFF_URL}/{staff_id}")
                     staff = response.json()
-                    staff = staff.get("staff")
                     if response.status_code != 200:
                         print(f"⚠️ Staff not found for ID {staff_id}")
                         return
@@ -200,12 +199,13 @@ def callback(channel, method, properties, body):
                     staff_name = staff.get("staff_name")
 
                     response = requests.get(STAFF_URL)
-
-                    if not response.data:
-                        print("⚠️ No staff chat IDs found.")
+                    staff_members = response.json()
+                    if response.status_code != 200:
+                        print("⚠️ Failed to fetch staff members.")
                         return
 
                     for staff_member in response.data:
+                        staff_member = staff_members.get("staff")
                         chat_id = staff_member.get("chat_id")
                         if chat_id:
                             send_message(chat_id, f"❌ {staff_name} has made multiple unsuccessful attempts to access Door 1.")
