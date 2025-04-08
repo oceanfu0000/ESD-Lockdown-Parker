@@ -192,6 +192,7 @@ def callback(channel, method, properties, body):
                     # Fetch staff name from staff 
                     response = requests.get(f"{STAFF_URL}/{staff_id}")
                     staff = response.json()
+                    staff = staff.get("staff")
                     if response.status_code != 200:
                         print(f"⚠️ Staff not found for ID {staff_id}")
                         return
