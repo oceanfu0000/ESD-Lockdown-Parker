@@ -50,19 +50,9 @@ Token should be generated! You may proceed to step 1
    ```
    > **Note**: Always include `--build` if you're making code changes to rebuild the containers.
 
-   If you are having trouble running kong, run this commands
-   ```
-   docker-compose run --rm kong kong migrations up
-
-   docker-compose run --rm kong kong migrations finish
-
-   docker-compose up kong --build -d
-   ```
-
 ## 🖥️ **3. Running the Frontend**
 
 To access the frontend, go to http://localhost:8100/home.html
-
 
 
 ## 📌 **4. Important Information**
