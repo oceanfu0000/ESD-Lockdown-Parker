@@ -48,7 +48,7 @@ load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
 PROJECT_ID = os.getenv("DIALOGFLOW_PROJECT_ID")
-GOOGLE_APPLICATION_CREDENTIALS = "esdlocking.json"
+GOOGLE_APPLICATION_CREDENTIALS = os.path.join(os.path.dirname(__file__), "esdlocking.json")
 
 staff_URL = os.getenv("STAFF_URL")
 guest_URL = os.getenv("GUEST_URL")
