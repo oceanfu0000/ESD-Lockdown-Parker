@@ -64,7 +64,6 @@ Token should be generated! You may proceed to step 1
 To access the frontend, go to http://localhost:8100/home.html
 
 
-
 ## 📌 **4. Important Information**
 
 For the list of ports, check out **Notes.md** for details about the different services running and their corresponding ports.
