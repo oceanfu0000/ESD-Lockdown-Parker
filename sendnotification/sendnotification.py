@@ -190,7 +190,7 @@ def callback(channel, method, properties, body):
                 staff_id = message.get("user_id")
                 try:
                     # Fetch staff name from staff 
-                    response = requests.get(STAFF_URL+f"/staff/{staff_id}")
+                    response = requests.get(f"{STAFF_URL}/{staff_id}")
                     staff = response.json()
                     if response.status_code != 200:
                         print(f"⚠️ Staff not found for ID {staff_id}")
@@ -198,7 +198,7 @@ def callback(channel, method, properties, body):
 
                     staff_name = staff.get("staff_name")
 
-                    response = requests.get(STAFF_URL+f"/staff")
+                    response = requests.get(STAFF_URL)
 
                     if not response.data:
                         print("⚠️ No staff chat IDs found.")
