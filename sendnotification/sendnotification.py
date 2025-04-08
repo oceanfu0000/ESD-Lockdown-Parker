@@ -190,7 +190,6 @@ def callback(channel, method, properties, body):
                 staff_id = message.get("user_id")
                 try:
                     # Fetch staff name from staff 
-                    # response = supabase.table("staff").select("staff_name").eq("staff_id", staff_id).execute()
                     response = requests.get(STAFF_URL+f"/staff/{staff_id}")
                     staff = response.json()
                     if response.status_code != 200:
