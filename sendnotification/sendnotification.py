@@ -203,9 +203,8 @@ def callback(channel, method, properties, body):
                     if response.status_code != 200:
                         print("⚠️ Failed to fetch staff members.")
                         return
-
-                    for staff_member in response.data:
-                        staff_member = staff_members.get("staff")
+                    # print(staff_members)
+                    for staff_member in staff_members:
                         chat_id = staff_member.get("chat_id")
                         if chat_id:
                             send_message(chat_id, f"❌ {staff_name} has made multiple unsuccessful attempts to access Door 1.")
