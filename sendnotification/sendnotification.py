@@ -101,8 +101,8 @@ def connect_to_rabbitmq():
                 pika.ConnectionParameters(
                     host=AMQP_HOST,
                     port=AMQP_PORT,
-                    heartbeat=60,
-                    blocked_connection_timeout=300
+                    heartbeat=0,
+                    blocked_connection_timeout=None
                 )
             )
             print("✅ Connected to RabbitMQ")
